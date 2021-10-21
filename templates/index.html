@@ -1,0 +1,88 @@
+<html>
+<head>
+
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+            crossorigin=""/>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
+          integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+
+     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+       crossorigin=""></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.1/font/bootstrap-icons.css">
+</head>
+<body>
+
+    <div class="row vh-100" style="height:100%">
+        <div class="col">
+            <div id="map"></div>
+        </div>
+        <div class="col-lg-5">
+            <h2>Itinéraires</h2>
+
+            <form class="form-inline">
+            <div class="custom-control custom-switch mr-3">
+                <input type="checkbox" class="custom-control-input" id="vtt-switch">
+                <label class="custom-control-label" for="vtt-switch">VTT</label>
+            </div>
+
+            <div class="custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="vae-switch">
+                <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> VAE</label>
+            </div>
+            </form>
+
+            <ul class="list-group mr-2" id="list-placeholder">
+
+            </ul>
+        </div>
+    </div>
+
+    {% raw %}
+    <script id="itinerary-template" type="text/html">
+        {{for itineraries }}
+        <li class="list-group-item mb-3">
+            <h5>
+
+                <i class="bi-signpost" ></i> {{:distance }} km
+                <i class="bi-stopwatch ml-2" ></i> {{:time}}
+                <i class="bi bi-cone-striped ml-2"></i> {{:safety }} %
+            </h5>
+            {{for shares }}
+                <span class="badge" style="background-color:{{: color }}" title="{{:label }}">{{:percentage }}% </span>
+            {{/for }}
+        </li>
+        {{/for}}
+    </script>
+    {%  endraw %}
+
+    <script
+            src="https://code.jquery.com/jquery-3.6.0.min.js"
+            integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+            crossorigin="anonymous"></script>
+
+    <script
+            src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"
+            integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF"
+            crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.11/jsrender.min.js"
+            integrity="sha512-bKlNlbTH3duwZ28zoqEhXui/yuaPuQVci6OAVu0zh2WfYbEKD39HszVR8byP4/L4YyBo3b5CGIY+4ldVN93uCg=="
+            crossorigin="anonymous"
+            referrerpolicy="no-referrer"></script>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}" ></script>
+
+</body>
+</html>

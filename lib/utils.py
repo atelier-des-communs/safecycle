@@ -6,7 +6,10 @@ from hashlib import md5
 
 from .cache import cache
 from .config import Config
-from .model import Itinerary, Path, Coord
+from .model import Itinerary, Path, Coord, UNSAFE
+import haversine as hs
+
+MAX_DISTANCE = 10
 
 def profile_fullname(profile) :
     if profile in Config.PROFILES :
@@ -127,12 +130,53 @@ def js_response(obj):
     return Response(to_json(obj), mimetype="application/json")
 
 
-def hash_itinerary(itinerary: Itinerary):
-    val = ""
-    for path in itinerary.paths:
-        coord = path.coords[0]
-        val += "%f:%f" % (coord.lat, coord.lon)
-    return md5(val.encode("utf-8"))
+
+def unsafe_distance(iti) :
+    res = 0
+    for path in iti.paths :
+        if path.type() in UNSAFE :
+            res += path.length
+
+    return res
+
+def is_worth(iti, other_iti) :
+
+    if same_itineraries(iti, other_iti) :
+        return False
+
+    # Longer and less safe ?
+
+    print(iti.id, "time", iti.time, "dist", unsafe_distance(iti))
+    print(other_iti.id, "time", other_iti.time, "dist", unsafe_distance(other_iti))
+
+    return not (iti.time > other_iti.time and unsafe_distance(iti) > unsafe_distance(other_iti))
+
+def same_itineraries(iti1, iti2) :
+    if len(iti1.paths) != len(iti2.paths) :
+        return False
+    for path1, path2 in zip(iti1.paths, iti2.paths) :
+        dist = hs.haversine(
+            (path1.coords[0].lat, path1.coords[0].lon),
+            (path2.coords[0].lat, path2.coords[0].lon))
+        if dist > MAX_DISTANCE :
+            return False
+    return True
+
+
+def purge_bad_itineraries(itis) :
+    """Remove itineraries that are neither faster or safer than others"""
+    res = []
+
+    for iti in itis :
+        for other_iti in itis :
+            if iti != other_iti and not is_worth(iti, other_iti) :
+                break
+        else :
+            res.append(iti)
+    return res
+
+
+
 
 
 

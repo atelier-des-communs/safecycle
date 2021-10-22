@@ -4,7 +4,8 @@ import json
 
 from lib.cache import cache
 from lib.config import Config
-from lib.utils import get_route, process_message, to_json, js_response, get_route_safe, hash_itinerary, HttpError
+from lib.utils import get_route, process_message, to_json, js_response, get_route_safe, HttpError, \
+    same_itineraries, is_worth, purge_bad_itineraries
 
 app = Flask(__name__)
 
@@ -22,21 +23,21 @@ def index():
 @app.route("/api/itineraries")
 def get_itineraries():
 
-    iti_by_hash = {}
-
     start = list(map(lambda s: float(s), request.args["start"].split(",")))
     end = list(map(lambda s: float(s), request.args["end"].split(",")))
-    profile = request.args["profile"]
+    prof = request.args["profile"]
+
+    res = []
 
     try:
-        for alternative in range(1, 4):
-            iti = get_route_safe(start, end, profile, alternative)
-            iti.id = "%s-%d" %(profile,  alternative)
-            iti_by_hash[hash_itinerary(iti)] = iti
+        for profile in ["route"] if prof == "route" else ["route", "vtt"]:
+            for alternative in range(1, 4):
+                iti = get_route_safe(start, end, profile, alternative)
+                iti.id = "%s-%d" %(profile,  alternative)
+                res.append(iti)
 
-        unique_itis = list(iti_by_hash.values())
-
-        return js_response(unique_itis)
+        res = purge_bad_itineraries(res)
+        return js_response(res)
 
     except HttpError as e:
         if e.status == 400:

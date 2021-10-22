@@ -1,0 +1,19 @@
+{
+  "name": "eslint-plugin-compat-demo",
+  "version": "1.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "eslint": "^7.7.0",
+    "eslint-plugin-compat": "^3.8.0"
+  },
+  "browserslist": [
+    "safari 9",
+    "ie 9",
+    "firefox 45",
+    "chrome 60"
+  ],
+  "scripts": {
+    "lint": "eslint .; exit 0",
+    "test": "yarn lint"
+  }
+}

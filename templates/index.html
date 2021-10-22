@@ -33,10 +33,20 @@
                 <label class="custom-control-label" for="vtt-switch">VTT</label>
             </div>
 
-            <div class="custom-control custom-switch">
+            <div class="custom-control custom-switch mr-3">
                 <input type="checkbox" class="custom-control-input" id="vae-switch">
                 <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> VAE</label>
             </div>
+
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                <label class="btn btn-outline-primary active">
+                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value= "safe"> sûr
+                </label>
+                <label class="btn btn-outline-primary">
+                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast"> rapide
+                </label>
+            </div>
+
             </form>
 
             <ul class="list-group mr-2" id="list-placeholder">
@@ -48,12 +58,15 @@
     {% raw %}
     <script id="itinerary-template" type="text/html">
         {{for itineraries }}
-        <li class="list-group-item mb-3">
+        <li class="list-group-item iti-item mb-3" data-iti-id="{{:id }}">
             <h5>
-
-                <i class="bi-signpost" ></i> {{:distance }} km
-                <i class="bi-stopwatch ml-2" ></i> {{:time}}
-                <i class="bi bi-cone-striped ml-2"></i> {{:safety }} %
+                <span title="Distance"><i class="bi-signpost" ></i> {{:distance }} km</span>
+                <span title="Temps" class="ml-2" ><i class="bi-stopwatch" ></i> {{:time}}</span>
+                {{if unsafe > 0 }}
+                    <span title="Axes primaires et secondaires non protégés" class="ml-2" >
+                        <i class="bi-exclamation-diamond"></i> {{:unsafe.toFixed(2) }} km
+                    </span>
+                {{/if}}
             </h5>
             {{for shares }}
                 <span class="badge" style="background-color:{{: color }}" title="{{:label }}">{{:percentage }}% </span>

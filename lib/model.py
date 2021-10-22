@@ -2,6 +2,14 @@ from collections import defaultdict
 from typing import List, Dict
 
 
+BIKE = "bike"
+PATH = "path"
+DANGER = "danger"
+MEDIUM = "medium_traffic"
+LOW = "low_traffic"
+
+UNSAFE = [DANGER, MEDIUM]
+
 class Coord :
     def __init__(self, lon:float, lat:float):
         self.lat = lat
@@ -33,18 +41,18 @@ class Path :
         probablyGood = ispaved or (not isunpaved and (isbike or tag_eq("highway", "footway")))
 
         if isbike :
-            return "bike"
+            return BIKE
 
         if tag_in("highway", ["track", "road", "path", "footway"]) and not probablyGood :
-            return "path"
+            return PATH
 
         if tag_in("highway", ["trunk", "trunk_link", "primary", "primary_link"]) :
-            return "danger"
+            return DANGER
 
         if tag_in("highway", ["secondary", "secondary_link"]):
-            return "medium_traffic"
+            return MEDIUM
 
-        return "low_traffic"
+        return LOW
 
     def __json__(self) :
         return {**self.__dict__, "type":self.type()}

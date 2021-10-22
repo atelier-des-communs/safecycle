@@ -228,12 +228,12 @@ assign costfactor
   #
   else if ( highway=track|road|path|footway ) then
   (
-    if      ( tracktype=grade1 ) then ( if probablyGood then 1.0 else 7.0 )
-    else if ( tracktype=grade2 ) then ( if probablyGood then 1.1 else 8.0 )
-    else if ( tracktype=grade3 ) then ( if probablyGood then 1.5 else 8.0 )
-    else if ( tracktype=grade4 ) then ( if probablyGood then 2.0 else 8.0 )
-    else if ( tracktype=grade5 ) then ( if probablyGood then 3.0 else 8.0 )
-    else                              ( if probablyGood then 1.0 else 9.0 )
+    if      ( tracktype=grade1 ) then ( if probablyGood then 1.0 else 15.0 )
+    else if ( tracktype=grade2 ) then ( if probablyGood then 1.1 else 15.0 )
+    else if ( tracktype=grade3 ) then ( if probablyGood then 1.5 else 15.0 )
+    else if ( tracktype=grade4 ) then ( if probablyGood then 2.0 else 20.0 )
+    else if ( tracktype=grade5 ) then ( if probablyGood then 3.0 else 30.0 )
+    else                              ( if probablyGood then 1.0 else 15.0 )
   )
 
   #

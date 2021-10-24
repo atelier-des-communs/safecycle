@@ -1,7 +1,7 @@
 
 
 const CENTER = [43.623454433187, 7.0469377950208605]
-
+const INIT_ZOOM = 14
 const START="start";
 const END="end";
 const VAE_SPEEDUP = 0.8;
@@ -14,11 +14,16 @@ const LOW_TRAFFIC = "low_traffic"
 
 const safe_types = [BIKE, LOW_TRAFFIC, PATH];
 const types_order = [PATH, BIKE, LOW_TRAFFIC, MEDIUM_TRAFFIC, DANGER]
+const NB_DAYS_PER_YEAR = 220
+const COST_PER_KM = 0.25
+const CO2_PER_KM = 0.120
 
 const SortType = {
     SAFE : "safe",
     FAST : "fast"
 }
+
+const address_parts = ["shop", "tourism", "amenity", "road", "village", "town", "city"]
 
 const typeColors = {
     [BIKE] : "#8efc95",
@@ -43,7 +48,9 @@ const state = {
     vtt:true,
     vae:true,
     itineraries:null,
-    sort : SortType.SAFE
+    sort : SortType.SAFE,
+    selected : null,
+    estimatesClosed : false
 }
 
 const markers = {
@@ -51,9 +58,14 @@ const markers = {
     [END]:null
 }
 
+const locationPickerCoords = {
+    [START]:null,
+    [END]:null
+}
+
 const itiGroups = {};
 
-const map = L.map('map').setView(CENTER, 16);
+const map = L.map('map').setView(CENTER, INIT_ZOOM);
 
 const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -133,6 +145,13 @@ function updateList() {
     }
     const tmpl = $.templates("#itinerary-template");
 
+    var economy = 0;
+    var carbon = 0;
+    if (state.car_distance) {
+        economy = Math.floor(2  * NB_DAYS_PER_YEAR * COST_PER_KM * state.car_distance / 1000)
+        carbon = Math.floor(2 * NB_DAYS_PER_YEAR * CO2_PER_KM * state.car_distance / 1000)
+    }
+
     let sortedIti = [...state.itineraries]
     sortedIti.sortOn(function (iti) {
         return (state.sort === SortType.SAFE) ? (unsafeDistance(iti)) : iti.time;
@@ -157,13 +176,16 @@ function updateList() {
             if (percentage > 0) {
                 shares.push({
                     percentage : Math.round(percentage),
+                    distance: iti.length *  iti.shares[key],
                     safe: safe_types.indexOf(key),
                     color: typeColors[key],
-                    label : typeNames[key]
+                    label : typeNames[key],
+                    type:key
                 });
-
             }
         }
+
+        shares.sortOn(share => types_order.indexOf(share.type))
 
         return {
             id:iti.id,
@@ -173,18 +195,46 @@ function updateList() {
             distance: (iti.length/1000).toFixed(1)}
     });
 
-    const html = tmpl.render({
+    let data = {
+        closed : state.estimatesClosed,
         itineraries:templateData,
-        colors:typeColors});
+        carbon, economy,
+        colors:typeColors};
+
+    console.log("listdata", data)
+
+    const html = tmpl.render(data);
 
     $("#list-placeholder").html(html);
-
 
     // Setup listeners
     $(".iti-item").on("mouseover", function () {
        highlightIti($(this).attr("data-iti-id"));
     });
+    $(".iti-item").on("mouseout", function () {
+       highlightIti(null);
+    });
+    $(".iti-item").on("click", function () {
+        selectItinerary($(this).attr("data-iti-id"));
+    });
 
+    $(".close-estimates").click(function() {
+        state.estimatesClosed = true;
+        updateList();
+    })
+
+    highlightIti(null);
+
+}
+
+function selectItinerary(id) {
+    if (state.selected === id) {
+        state.selected = null
+    } else {
+        state.selected = id;
+    }
+    highlightIti(id);
+    updateUrl();
 }
 
 function cleanMap() {
@@ -194,21 +244,22 @@ function cleanMap() {
     });
 }
 
-function highlightIti(highlight_id) {
-    for (let iti of state.itineraries) {
+function highlightIti(over_id) {
+
+    function isHighlighted(id) {
+        return (id === over_id) || (id === state.selected) ;
+    }
+
+    if (state.itineraries) for (let iti of state.itineraries) {
         // Highlight on map
         itiGroups[iti.id].eachLayer(function (layer) {
-            layer.setStyle({opacity: (highlight_id && highlight_id !== iti.id) ? 0.2 : 1});
+            layer.setStyle({opacity: (isHighlighted(iti.id) || (!state.selected && !over_id)) ? 1: 0.2});
         });
     }
 
     $(".iti-item").each(function () {
         let iti_id = $(this).attr("data-iti-id");
-        if (iti_id === highlight_id) {
-            $(this).addClass("highlighted");
-        } else {
-            $(this).removeClass("highlighted");
-        }
+        $(this).toggleClass("highlighted", isHighlighted(iti_id));
     })
 }
 
@@ -246,6 +297,9 @@ function updateMap() {
             });
             poly.on('mouseout', function()  {
                 highlightIti(null);
+            })
+            poly.on('click', function()  {
+                selectItinerary(iti.id);
             })
         }
 
@@ -313,6 +367,8 @@ function urlUpdated() {
     state.vae = urlParams.get("vae") === "true";
     state.vtt = urlParams.get("profile") === "vtt";
     state.sort = urlParams.get("sort") || "safe";
+    state.selected = window.location.hash.replace("#", "");
+
     for (let end of [START, END]) {
         if (urlParams.has(end)) {
             let [lat, lon] = urlParams.get(end).split(",");
@@ -334,12 +390,15 @@ function stateUpdatedNoUrl() {
 
     updateSwitchesFromState();
     updateItineraryFromState();
+    highlightIti(null);
 
     for (let end of [START, END]) {
         if (state.coords[end]) {
             createOrUpdateMarker(end, state.coords[end]);
         }
     }
+
+    $("#map").toggleClass("clickable", ! (state.coords[START] && state.coords[END]))
 
     // Both marker setup ? => disable click on map
     if (state.coords[START] && state.coords[END]) {
@@ -366,8 +425,15 @@ function updateItineraryFromState() {
     $("body").addClass("loading");
     $("#map").addClass("loading");
 
-    jQuery.getJSON(url, function (itineraries) {
-        state.itineraries = itineraries;
+    jQuery.getJSON(url, function (res) {
+        state.itineraries = res.itineraries;
+        state.car_distance = res.car_distance;
+
+        let ids = state.itineraries.map(iti => iti.id);
+        if (ids.indexOf(state.selected) === -1) {
+            state.selected = null;
+        }
+
         updateMap();
         updateList();
 
@@ -387,6 +453,10 @@ function updateSwitchesFromState() {
     $("input[name=sort]").each(function () {
         let type = $(this).val();
         $(this).prop("checked", type === state.sort);
+    })
+      $(".sort-button").each(function () {
+        let type = $(this).attr("data-sort");
+        $(this).toggleClass("active", type === state.sort);
     })
 }
 
@@ -411,11 +481,14 @@ function initAll() {
             state.sort = $(this).val();
         }
         updateList();
+        updateUrl();
     });
 
     window.onpopstate = () => {
         urlUpdated();
     };
+
+    setupAutocomplete();
 }
 
 function updateUrl() {
@@ -434,13 +507,93 @@ function updateUrl() {
         }
     }
 
-    history.pushState(null, null, "?" + encodeParams(params));
+    let url = "?" + encodeParams(params) + ((state.selected) ? ("#" + state.selected) : "");
+
+    history.pushState(null, null, url);
 }
 
 function encodeParams(params) {
     const searchParams = new URLSearchParams();
     Object.keys(params).forEach(key => searchParams.append(key, params[key]));
     return searchParams.toString();
+}
+
+function nominatim(q, callback) {
+    let base = "https://nominatim.openstreetmap.org/search?";
+    let bounds = map.getBounds();
+    let bbox =
+        bounds.getSouth() + "," +
+        bounds.getWest() + "," +
+        bounds.getNorth() + "," +
+        bounds.getEast();
+
+    let params={
+        q,
+        format:"jsonv2",
+        countrycodes:"fr",
+        "accept-language":"",
+        addressdetails:1,
+        dedupe:1,
+        viewbox: bbox}
+    $.getJSON(base + encodeParams(params), function (data) {
+        let res = data.map(function (item) {
+            let addr = item.address;
+            var text = "";
+            var parts = [];
+            for(let part of address_parts) {
+                if (addr[part]) {
+                    parts.push(addr[part]);
+                }
+            }
+            return {
+                text : parts.join(", "),
+                value : {
+                    lat: parseFloat(item.lat),
+                    lon: parseFloat(item.lon)
+                }
+            }
+        });
+
+        callback(res);
+    });
+}
+
+
+
+function setupAutocomplete() {
+
+    let debouncedNominatim = debounce(nominatim, 1000);
+
+
+    for (let end of [START, END]) {
+
+        let input = $('.location-input[data-end=' + end + ']');
+
+        input.autoComplete({
+            resolver: 'custom',
+            events: {
+                search: (q, cb) => {
+
+                    let parent = $(".location-input-group[data-end="+end+"]");
+
+                    parent.toggleClass("location-loading", true);
+
+                    debouncedNominatim(q, function (data) {
+                        cb(data);
+                        parent.toggleClass("location-loading", false);
+                    });
+                }
+            }
+        });
+    }
+
+    $('.location-input').on("autocomplete.select", function(e, item) {
+        let end = $(this).attr("id").split("-")[1];
+        console.log(end, item)
+        updateCoord(end, item.value);
+    });
+
+
 }
 
 $(document).ready(function () {
@@ -458,4 +611,12 @@ Array.prototype.sortOn = function(f){
         }
         return 0;
     });
+}
+
+function debounce(func, wait) {
+  let timeout
+  return (...args) => {
+    clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
 }

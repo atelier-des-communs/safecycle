@@ -27,21 +27,35 @@ def get_itineraries():
     end = list(map(lambda s: float(s), request.args["end"].split(",")))
     prof = request.args["profile"]
 
-    res = []
+    itis = []
 
     try:
+
+
+
         for profile in ["route"] if prof == "route" else ["route", "vtt"]:
             for alternative in range(1, 4):
                 iti = get_route_safe(start, end, profile, alternative)
                 iti.id = "%s-%d" %(profile,  alternative)
-                res.append(iti)
+                itis.append(iti)
 
-        res = purge_bad_itineraries(res)
-        return js_response(res)
+        itis = purge_bad_itineraries(itis)
+
 
     except HttpError as e:
         if e.status == 400:
             return "No itinerary found", 400
+
+    car_distance = None
+    try :
+        car_iti = get_route_safe(start, end, "car-fast", 1)
+        car_distance = car_iti.length()
+    except:
+        pass
+
+    return js_response(dict(
+        itineraries=itis,
+        car_distance=car_distance))
 
 
 if __name__ == '__main__':

@@ -7,6 +7,53 @@
     cursor: wait !important;
 }
 
+.header {
+    background-color: #a3c4e8;
+}
+
+h1 {
+    font-weight: 400;
+}
+
+.title {
+    color:aliceblue;
+    font-weight: bold;
+}
+
+.subtitle {
+     color:aliceblue;
+    font-weight: bold;
+}
+
+.logo {
+    color :#37362c;
+}
+
+#map.clickable {
+    cursor: pointer;
+}
+
 .highlighted {
     background-color: darkgray;
+}
+
+.spinner {
+    display: none;
+}
+
+.location-loading .spinner {
+    display: inline !important;
+}
+
+.location-loading .no-spinner {
+    display: none !important;
+}
+
+.dropdown-item {
+    white-space: pre-wrap;
+    border-bottom: 1px gray;
+}
+
+.velotaf-info {
+   background-color: #aedaf0 !important;
 }

@@ -140,15 +140,6 @@ def unsafe_distance(iti) :
     return res
 
 def is_worth(iti, other_iti) :
-
-    if same_itineraries(iti, other_iti) :
-        return False
-
-    # Longer and less safe ?
-
-    print(iti.id, "time", iti.time, "dist", unsafe_distance(iti))
-    print(other_iti.id, "time", other_iti.time, "dist", unsafe_distance(other_iti))
-
     return not (iti.time > other_iti.time and unsafe_distance(iti) > unsafe_distance(other_iti))
 
 def same_itineraries(iti1, iti2) :
@@ -165,15 +156,27 @@ def same_itineraries(iti1, iti2) :
 
 def purge_bad_itineraries(itis) :
     """Remove itineraries that are neither faster or safer than others"""
-    res = []
+    winners = []
 
     for iti in itis :
         for other_iti in itis :
             if iti != other_iti and not is_worth(iti, other_iti) :
                 break
         else :
-            res.append(iti)
+            winners.append(iti)
+    res= []
+
+    # Remove duplicates
+    for winner in winners :
+        for other in res :
+            if same_itineraries(winner, other):
+                break
+        else:
+            res.append(winner)
     return res
+
+
+
 
 
 

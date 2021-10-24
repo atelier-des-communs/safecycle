@@ -18,16 +18,59 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.1/font/bootstrap-icons.css">
 </head>
+
 <body>
+    <div class="p-3 text-center header">
+        <h1>
+            <span class="title">SafeCycle</span>
+            <span class="logo">
+                {<i class="bi-bicycle"></i>}
+            </span>
+        </h1>
+        <p class="subtitle">Itinéraire pour vélo, centré sur la sécurité</p>
+    </div>
 
     <div class="row vh-100" style="height:100%">
         <div class="col">
             <div id="map"></div>
         </div>
         <div class="col-lg-5">
-            <h2>Itinéraires</h2>
 
-            <form class="form-inline">
+            <form class="m-4">
+                <div class="row">
+
+                    <div class="col">
+                        <div class="input-group location-input-group" data-end="start">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <span class="spinner-border spinner-border-sm spinner" role="status" aria-hidden="true"></span>
+                                    <i class="bi-geo-alt-fill no-spinner" style="color:yellowgreen"></i>
+                                </div>
+                            </div>
+                            <select  class="form-control location-input" id="input-start" data-end="start" placeholder="Départ (ou clic sur carte)">
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="input-group location-input-group" data-end="end">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <span class="spinner-border spinner-border-sm spinner" role="status" aria-hidden="true"></span>
+                                    <i class="bi-geo-alt-fill no-spinner" style="color:red"></i>
+                                </div>
+                            </div>
+                            <select  class="form-control location-input" id="input-end" data-end="end" placeholder="Arrivée (ou clic sur carte)">
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+
+            <form class="form-inline ">
+
+
             <div class="custom-control custom-switch mr-3">
                 <input type="checkbox" class="custom-control-input" id="vtt-switch">
                 <label class="custom-control-label" for="vtt-switch">VTT</label>
@@ -39,11 +82,11 @@
             </div>
 
             <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                <label class="btn btn-outline-primary active">
-                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value= "safe"> sûr
+                <label class="btn btn-outline-primary sort-button" data-sort="safe">
+                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe"> plus sûr
                 </label>
-                <label class="btn btn-outline-primary">
-                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast"> rapide
+                <label class="btn btn-outline-primary sort-button" data-sort="fast" >
+                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast"> plus rapide
                 </label>
             </div>
 
@@ -57,6 +100,17 @@
 
     {% raw %}
     <script id="itinerary-template" type="text/html">
+
+        {{if !closed && (economy > 0) }}
+        <li class="list-group-item mb-3 velotaf-info">
+            <button type="button "class="btn btn-sm btn-light float-right close-estimates"><i class="bi-x"></i></button>
+            <p>Economies pour <abbr title="220 jours ouvrés">1 an</abbr> de vélotaf :</p>
+            <span title="économies financières" ><i class="bi-piggy-bank"></i> <b>{{:economy }} €</b></span>
+            <span title="économies carbonne" ><i class="bi-tree"></i> <b> {{:carbon }} Kg CO2<br/></b></span>
+        </li>
+        {{/if }}
+
+
         {{for itineraries }}
         <li class="list-group-item iti-item mb-3" data-iti-id="{{:id }}">
             <h5>
@@ -68,12 +122,11 @@
                     </span>
                 {{/if}}
             </h5>
-            {{for shares }}
-                <span class="badge" style="background-color:{{: color }}" title="{{:label }}">{{:percentage }}% </span>
-            {{/for }}
+            {{for shares }}<span style="background-color:{{: color }}; width:{{:distance/100}}; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
         </li>
         {{/for}}
     </script>
+
     {%  endraw %}
 
     <script
@@ -94,6 +147,10 @@
             integrity="sha512-bKlNlbTH3duwZ28zoqEhXui/yuaPuQVci6OAVu0zh2WfYbEKD39HszVR8byP4/L4YyBo3b5CGIY+4ldVN93uCg=="
             crossorigin="anonymous"
             referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.7/dist/latest/bootstrap-autocomplete.min.js">
+
+    </script>
 
     <script src="{{ url_for('static', filename='js/main.js') }}" ></script>
 

@@ -114,6 +114,7 @@
         {{for itineraries }}
         <li class="list-group-item iti-item mb-3" data-iti-id="{{:id }}">
             <h5>
+                <a title="trace GPX" href="{{:gpx_url}}" type="button" class="btn btn-sm btn-light float-right close-estimates"><i class="bi-file-earmark-arrow-down"></i></a>
                 <span title="Distance"><i class="bi-signpost" ></i> {{:distance }} km</span>
                 <span title="Temps" class="ml-2" ><i class="bi-stopwatch" ></i> {{:time}}</span>
                 {{if unsafe > 0 }}

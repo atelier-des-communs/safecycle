@@ -57,6 +57,28 @@ def get_itineraries():
         itineraries=itis,
         car_distance=car_distance))
 
+@app.route("/api/gpx")
+def gpx() :
+
+    start = list(map(lambda s: float(s), request.args["start"].split(",")))
+    end = list(map(lambda s: float(s), request.args["end"].split(",")))
+    profile = request.args["profile"]
+    alternative = int(request.args["alt"])
+
+    iti = get_route_safe(start, end, profile, alternative)
+
+    points = []
+    for path in iti.paths :
+        points += path.coords[0:-1]
+    points.append(iti.paths[-1].coords[-1])
+
+    out = render_template("route.xml", points=points)
+
+    return Response(
+        out,
+        mimetype="application/gpx+xml",
+        headers={'Content-Disposition' : 'attachment;filename=route.gpx'})
+
 
 if __name__ == '__main__':
     app.run()

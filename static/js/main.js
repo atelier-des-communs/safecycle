@@ -171,6 +171,14 @@ function updateList() {
 
         const shares = [];
 
+        let gpx_params = {
+            alt:iti.alternative,
+            profile:iti.profile,
+            ...encodeCoords()
+        }
+
+        let gpx_url = "/api/gpx?" + encodeParams(gpx_params);
+
         for (const key in iti.shares) {
             const percentage = iti.shares[key] * 100;
             if (percentage > 0) {
@@ -191,6 +199,7 @@ function updateList() {
             id:iti.id,
             time,
             shares,
+            gpx_url,
             unsafe :(unsafeDistance(iti) /1000),
             distance: (iti.length/1000).toFixed(1)}
     });
@@ -493,23 +502,28 @@ function initAll() {
 
 function updateUrl() {
 
-    const params = {
+    let params = {
         profile: (state.vtt ? "vtt" : "route"),
         vae: state.vae,
         sort : state.sort,
-    }
-
-    for (let end of [START, END]) {
-        if (state.coords[end]) {
-            params[end] =
-                state.coords[end].lat.toFixed(6) + "," +
-                state.coords[end].lon.toFixed(6);
-        }
+        ...encodeCoords()
     }
 
     let url = "?" + encodeParams(params) + ((state.selected) ? ("#" + state.selected) : "");
 
     history.pushState(null, null, url);
+}
+
+function encodeCoords() {
+    var res = {}
+    for (let end of [START, END]) {
+        if (state.coords[end]) {
+            res[end] =
+                state.coords[end].lat.toFixed(6) + "," +
+                state.coords[end].lon.toFixed(6);
+        }
+    }
+    return res
 }
 
 function encodeParams(params) {

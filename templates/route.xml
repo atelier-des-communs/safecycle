@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<gpx xmlns="http://www.topografix.com/GPX/1/1" creator="Velotaf" version="1.1"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+
+<rte>
+<name>Itinéraire</name>
+    {% for point in points %}
+    <rtept lat="{{ point.lat }}" lon="{{ point.lon }}">
+        <ele>{{ point.elevation }}</ele>
+    </rtept>
+    {% endfor %}
+</rte>
+</gpx>

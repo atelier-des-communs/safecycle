@@ -40,7 +40,10 @@ def get_route(from_latlon, to_latlon, profile=None, alternative=0) :
 
     res = requests.get(url)
     if res.status_code == 200:
-        return process_message(res.json())
+        res = process_message(res.json())
+        res.alternative = alternative
+        res.profile = profile
+        return res
     else :
         raise HttpError(url, res.status_code, res.text)
 
@@ -67,7 +70,6 @@ def process_message(js) :
     header = messages.pop(0)
     messages = list(dict((k, v) for k, v in zip(header, message)) for message in messages)
 
-
     time = int(props["total-time"])
 
     iti = Itinerary(time)
@@ -87,7 +89,8 @@ def process_message(js) :
         lon_str = str(int(lon * 1000000))
         lat_str = str(int(lat * 1000000))
 
-        coord = Coord(lon, lat)
+        coord = Coord(lon, lat, height)
+
         curr_path.coords.append(coord)
 
         if curr_message is not None and lat_str == curr_message["Latitude"] and lon_str == curr_message["Longitude"]:

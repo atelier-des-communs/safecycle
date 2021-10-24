@@ -11,9 +11,10 @@ LOW = "low_traffic"
 UNSAFE = [DANGER, MEDIUM]
 
 class Coord :
-    def __init__(self, lon:float, lat:float):
+    def __init__(self, lon:float, lat:float, elevation:float=None):
         self.lat = lat
         self.lon = lon
+        self.elevation = elevation
 
 class Path :
     def __init__(self):
@@ -61,6 +62,8 @@ class Path :
 class Itinerary:
     def __init__(self, time):
         self.time = time
+        self.profile = None
+        self.alternative = None
         self.paths : List[Path] = []
 
     def shares(self):

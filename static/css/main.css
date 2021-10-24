@@ -57,3 +57,13 @@ h1 {
 .velotaf-info {
    background-color: #aedaf0 !important;
 }
+
+br.responsive {
+  display: inline; // Show BR tag for narrow screens
+}
+
+@media (min-width: 1000px) {
+  br.responsive {
+    display: none; // Hide BR tag for wider screens
+  }
+}

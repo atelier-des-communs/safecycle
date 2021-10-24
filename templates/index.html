@@ -1,6 +1,8 @@
 <html>
 <head>
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
           integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
@@ -37,10 +39,8 @@
         <div class="col-lg-5">
 
             <form class="m-4">
-                <div class="row">
 
-                    <div class="col">
-                        <div class="input-group location-input-group" data-end="start">
+                        <div class="input-group location-input-group mb-2" data-end="start">
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
                                     <span class="spinner-border spinner-border-sm spinner" role="status" aria-hidden="true"></span>
@@ -50,9 +50,7 @@
                             <select  class="form-control location-input" id="input-start" data-end="start" placeholder="Départ (ou clic sur carte)">
                             </select>
                         </div>
-                    </div>
 
-                    <div class="col">
                         <div class="input-group location-input-group" data-end="end">
                             <div class="input-group-prepend">
                                 <div class="input-group-text">
@@ -63,9 +61,7 @@
                             <select  class="form-control location-input" id="input-end" data-end="end" placeholder="Arrivée (ou clic sur carte)">
                             </select>
                         </div>
-                    </div>
 
-                </div>
             </form>
 
             <form class="form-inline ">

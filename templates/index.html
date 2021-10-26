@@ -64,29 +64,30 @@
 
             </form>
 
-            <form class="form-inline ">
+            <div class="center-container">
+                <form class="form-inline ">
 
+                    <div class="custom-control custom-switch mr-3">
+                        <input type="checkbox" class="custom-control-input" id="vtt-switch">
+                        <label class="custom-control-label" for="vtt-switch">VTT</label>
+                    </div>
 
-            <div class="custom-control custom-switch mr-3">
-                <input type="checkbox" class="custom-control-input" id="vtt-switch">
-                <label class="custom-control-label" for="vtt-switch">VTT</label>
+                    <div class="custom-control custom-switch mr-3">
+                        <input type="checkbox" class="custom-control-input" id="vae-switch">
+                        <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> VAE</label>
+                    </div>
+
+                    <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons">
+                        <label class="btn btn-sm btn-outline-primary sort-button" data-sort="safe">
+                            <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe"> plus sûr
+                        </label>
+                        <label class="btn btn-sm btn-outline-primary sort-button" data-sort="fast" >
+                            <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast"> plus rapide
+                        </label>
+                    </div>
+
+                </form>
             </div>
-
-            <div class="custom-control custom-switch mr-3">
-                <input type="checkbox" class="custom-control-input" id="vae-switch">
-                <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> VAE</label>
-            </div>
-
-            <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                <label class="btn btn-outline-primary sort-button" data-sort="safe">
-                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe"> plus sûr
-                </label>
-                <label class="btn btn-outline-primary sort-button" data-sort="fast" >
-                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast"> plus rapide
-                </label>
-            </div>
-
-            </form>
 
             <ul class="list-group mr-2" id="list-placeholder">
 
@@ -98,9 +99,9 @@
     <script id="itinerary-template" type="text/html">
 
         {{if !closed && (economy > 0) }}
-        <li class="list-group-item mb-3 velotaf-info">
+        <li class="list-group-item mb-5 velotaf-info">
             <button type="button "class="btn btn-sm btn-light float-right close-estimates"><i class="bi-x"></i></button>
-            <p>Economies pour <abbr title="220 jours ouvrés">1 an</abbr> de vélotaf :</p>
+            <p><i class="bi-lightbulb"></i> Economies pour <abbr title="220 jours ouvrés">1 an</abbr> de vélotaf :</p>
             <span title="économies financières" ><i class="bi-piggy-bank"></i> <b>{{:economy }} €</b></span>
             <span title="économies carbonne" ><i class="bi-tree"></i> <b> {{:carbon }} Kg CO2<br/></b></span>
         </li>
@@ -115,11 +116,14 @@
                 <span title="Temps" class="ml-2" ><i class="bi-stopwatch" ></i> {{:time}}</span>
                 {{if unsafe > 0 }}
                     <span title="Axes primaires et secondaires non protégés" class="ml-2" >
-                        <i class="bi-exclamation-diamond"></i> {{:unsafe.toFixed(2) }} km
+                        <i class="bi-exclamation-diamond-fill warning"></i> {{:unsafe.toFixed(2) }} km
                     </span>
                 {{/if}}
+                <span title="Dénivelé : {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }} / {{if drops.negative > 0 }} -{{: drops.negative }}m {{/if }}" class="ml-2" ><i class="bi-graph-up" ></i>
+                    {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }}
+                </span>
             </h5>
-            {{for shares }}<span style="background-color:{{: color }}; width:{{:distance/100}}; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
+            {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{:distance / ~root.max_distance * 300}}; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
         </li>
         {{/for}}
     </script>

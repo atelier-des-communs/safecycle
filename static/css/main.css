@@ -1,6 +1,7 @@
 #map {
     height:100%;
     min-height: 500px;
+    margin: 1em;
 }
 
 .loading {
@@ -66,4 +67,14 @@ br.responsive {
   br.responsive {
     display: none; // Hide BR tag for wider screens
   }
+}
+
+.center-container {
+    justify-content: center;
+    display: flex;
+    text-align: center;
+}
+
+.share-type {
+    font-size: 0.5em;
 }

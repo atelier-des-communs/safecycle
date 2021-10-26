@@ -65,7 +65,10 @@ const locationPickerCoords = {
 
 const itiGroups = {};
 
-const map = L.map('map').setView(CENTER, INIT_ZOOM);
+const map = L.map('map',
+    {
+        dragging: !L.Browser.mobile
+    }).setView(CENTER, INIT_ZOOM);
 
 const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -130,13 +133,31 @@ map.on("click", onMapClick);
 
 
 function unsafeDistance(iti) {
-    res = 0;
+    var res = 0;
     for (let path of iti.paths) {
         if (safe_types.indexOf(path.type) == -1) {
                 res += path.length;
         }
     }
     return res;
+}
+
+function computeDrops(iti) {
+    var positive=0;
+    var negative=0;
+    for (let path of iti.paths) {
+        if (iti.paths.length >1) for (let i=0; i<path.coords.length -2; i++) {
+           diff = path.coords[i+1].elevation -  path.coords[i].elevation;
+           if (diff > 0) {
+               positive += diff;
+           } else {
+               negative -= diff
+           }
+        }
+    }
+    return {
+        positive:Math.round(positive),
+        negative:Math.round(negative)}
 }
 
 function updateList() {
@@ -157,9 +178,13 @@ function updateList() {
         return (state.sort === SortType.SAFE) ? (unsafeDistance(iti)) : iti.time;
     })
 
+
+    let max_distance = Math.max(...sortedIti.map(iti => iti.length ));
+
     const templateData = sortedIti.map(function (iti) {
 
         var mins = Math.floor(iti.time / 60)
+
 
         if (state.vae) {
             mins = mins * VAE_SPEEDUP;
@@ -171,14 +196,6 @@ function updateList() {
 
         const shares = [];
 
-        let gpx_params = {
-            alt:iti.alternative,
-            profile:iti.profile,
-            ...encodeCoords()
-        }
-
-        let gpx_url = "/api/gpx?" + encodeParams(gpx_params);
-
         for (const key in iti.shares) {
             const percentage = iti.shares[key] * 100;
             if (percentage > 0) {
@@ -188,18 +205,27 @@ function updateList() {
                     safe: safe_types.indexOf(key),
                     color: typeColors[key],
                     label : typeNames[key],
-                    type:key
+                    type:key,
                 });
             }
         }
 
         shares.sortOn(share => types_order.indexOf(share.type))
 
+        let gpx_params = {
+            alt:iti.alternative,
+            profile:iti.profile,
+            ...encodeCoords()
+        }
+        let gpx_url = "/api/gpx?" + encodeParams(gpx_params);
+        let drops = computeDrops(iti);
+
         return {
             id:iti.id,
             time,
             shares,
             gpx_url,
+            drops,
             unsafe :(unsafeDistance(iti) /1000),
             distance: (iti.length/1000).toFixed(1)}
     });
@@ -208,6 +234,7 @@ function updateList() {
         closed : state.estimatesClosed,
         itineraries:templateData,
         carbon, economy,
+        max_distance,
         colors:typeColors};
 
     console.log("listdata", data)
@@ -374,7 +401,7 @@ function updateMap() {
 function urlUpdated() {
     let urlParams = new URLSearchParams(window.location.search);
     state.vae = urlParams.get("vae") === "true";
-    state.vtt = urlParams.get("profile") === "vtt";
+    state.vtt = urlParams.get("profile") || "vtt";
     state.sort = urlParams.get("sort") || "safe";
     state.selected = window.location.hash.replace("#", "");
 

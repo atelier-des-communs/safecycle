@@ -96,6 +96,18 @@
     </div>
 
     {% raw %}
+    <script id="legend-template" type="text/html">
+        <div class="info legend">
+            <button type="button" class="btn btn-sm btn-compact btn-tiny float-right toggle-legend">-</button>
+            <div class="legend-content" >
+            {{for types }}
+                <i style="background:{{: color }}"></i> {{: name }} <br/>
+            {{/for }}
+            </div>
+        </div>
+    </script>
+
+
     <script id="itinerary-template" type="text/html">
 
         {{if !closed && (economy > 0) }}

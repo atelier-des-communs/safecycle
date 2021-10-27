@@ -65,14 +65,44 @@ const locationPickerCoords = {
 
 const itiGroups = {};
 
-const map = L.map('map',
+
+
+
+var map = null;
+
+function initMap() {
+
+    let map = L.map('map',
     {
         dragging: !L.Browser.mobile
     }).setView(CENTER, INIT_ZOOM);
 
-const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-}).setOpacity(0.7).addTo(map);
+    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).setOpacity(0.7).addTo(map);
+
+
+    let legend = L.control({position: 'topright'});
+
+    legend.onAdd = function (map) {
+        let types  = types_order.map(type => ({
+            color:typeColors[type],
+            name: typeNames[type]}))
+        let html = renderTemplate("#legend-template", {types});
+        return $(html).get(0);
+    };
+
+    legend.addTo(map);
+
+    $("button.toggle-legend").click(function() {
+        let hidden = $(".legend-content").hasClass("hidden");
+        $(this).text(hidden ? "-" : "+")
+        $(".legend-content").toggleClass("hidden", !hidden);
+    });
+
+    map.on("click", onMapClick);
+    return map;
+}
 
 function latlon2latLng(latlon) {
     return {lat:latlon.lat, lng:latlon.lon}
@@ -129,7 +159,7 @@ function onMapClick(e) {
 }
 
 
-map.on("click", onMapClick);
+
 
 
 function unsafeDistance(iti) {
@@ -164,7 +194,6 @@ function updateList() {
     if (!state.itineraries) {
         return;
     }
-    const tmpl = $.templates("#itinerary-template");
 
     var economy = 0;
     var carbon = 0;
@@ -237,10 +266,7 @@ function updateList() {
         max_distance,
         colors:typeColors};
 
-    console.log("listdata", data)
-
-    const html = tmpl.render(data);
-
+    let html = renderTemplate("#itinerary-template", data)
     $("#list-placeholder").html(html);
 
     // Setup listeners
@@ -261,6 +287,11 @@ function updateList() {
 
     highlightIti(null);
 
+}
+
+function renderTemplate(templateId, data) {
+   let tmpl = $.templates(templateId);
+   return tmpl.render(data);
 }
 
 function selectItinerary(id) {
@@ -497,6 +528,7 @@ function updateSwitchesFromState() {
 }
 
 function initAll() {
+    map = initMap();
 
     urlUpdated();
 

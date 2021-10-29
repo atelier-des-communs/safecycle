@@ -65,16 +65,13 @@ const locationPickerCoords = {
 
 const itiGroups = {};
 
-
-
-
 var map = null;
 
 function initMap() {
 
     let map = L.map('map',
     {
-        dragging: !L.Browser.mobile
+        // dragging: !L.Browser.mobile
     }).setView(CENTER, INIT_ZOOM);
 
     const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

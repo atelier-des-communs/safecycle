@@ -15,7 +15,7 @@
 }
 
 .header {
-    background-color: #a3c4e8;
+    background-color: #e1f6ff;
 }
 
 #stripes {
@@ -39,17 +39,20 @@ h1 {
 }
 
 .title {
-    color:aliceblue;
+    color: #000000b3;
     font-weight: bold;
 }
 
 .subtitle {
-     color:aliceblue;
-    font-weight: bold;
+    color: #0000008f;
+    font-weight: 300;
+    font-size: 16pt;
 }
 
 .logo {
-    color :#37362c;
+color: #1f6d9b;
+font-size: larger;
+font-weight: 700;
 }
 
 #map.clickable {

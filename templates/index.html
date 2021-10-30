@@ -105,7 +105,7 @@
                 {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }}
             </span>
         </h5>
-        {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{:distance / ~root.max_distance * 300}}; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
+        {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{: (distance / ~root.max_distance * 300).toFixed() }}px; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
     </li>
     {{/for}}
 </script>

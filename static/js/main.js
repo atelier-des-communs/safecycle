@@ -332,7 +332,7 @@ function highlightIti(over_id) {
         let highlighted = (isHighlighted(iti.id) || (!state.selected && !over_id));
 
         // Highlight the panes containing the itinerary
-        PANES[iti.id].style.opacity = highlighted ? 1: 0.4;
+        PANES[iti.id].style.opacity = highlighted ? 1: 0.25;
         PANES[iti.id].style.zIndex = highlighted ? TOP_PANE_ZINDEX : LOW_PANE_ZINDEX;
     }
 

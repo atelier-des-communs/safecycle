@@ -17,6 +17,7 @@ assign avoid_unsafe = true # %avoid_unsafe% | Set to true to avoid standard high
 assign considerTurnRestrictions = false  # %considerTurnRestrictions% | Set to true to take turn restrictions into account | boolean
 assign processUnusedTags        = false  # %processUnusedTags% | Set to true to output unused tags in data tab | boolean
 assign mountainBike = false # %mountainBike% | Set to True if using moutainbike : paths are allowed | boolean
+assign electric = false # %electric% | Set to True if using electric bike
 
 # Change elevation parameters
 assign consider_elevation = true  # %consider_elevation% | Set to false to ignore elevation in routing | boolean
@@ -31,10 +32,10 @@ assign trackCost = if mountainBike then 1 else 10
 
 # Kinematic model parameters (travel time computation)
 assign totalMass  = 90     # %totalMass% | Mass (in kg) of the bike + biker, for travel time computation | number
-assign maxSpeed   = 45     # %maxSpeed% | Absolute maximum speed (in km/h), for travel time computation | number
+assign maxSpeed   = 30     # %maxSpeed% | Absolute maximum speed (in km/h), for travel time computation | number
 assign S_C_x      = 0.225  # %S_C_x% | Drag coefficient times the reference area (in m^2), for travel time computation | number
 assign C_r        = 0.01   # %C_r% | Rolling resistance coefficient (dimensionless), for travel time computation | number
-assign bikerPower = 100    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
+assign bikerPower = 80    # %bikerPower% | Average power (in W) provided by the biker, for travel time computation | number
 
 # Turn instructions settings
 assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=orux-style]

@@ -1,16 +1,27 @@
+import dotenv, os
+import json
 
-def load_profile(profile) :
-    with open("res/profile-%s.txt" % profile, "r") as f:
-        return f.read()
+dotenv.load_dotenv()
+
+def env(key, default=None):
+    res = os.environ.get(key, default)
+    if res is None :
+        raise Exception("Missing env :", key)
+    return res
+
+def load_js(path) :
+    with open(path, "r") as f:
+        return json.load(f)
+
 
 class Config:
     BROUTER_ROOT="http://brouter.de/brouter"
-    PROFILES = dict(
-        route=load_profile("route"),
-        vtt=load_profile("vtt"))
 
-    # Unique ID, public to prevent collisions
-    APP_ID="FOOBAR23"
     CACHE_TYPE="SimpleCache"  # Flask-Caching related configs
-    CACHE_DEFAULT_TIMEOUT=24*3600
+
+    CACHE_DEFAULT_TIMEOUT = 24*3600
+
+    FLASK_ENV = env("FLASK_ENV")
+
+    DEFAULT_PROFILES = load_js("res/default_profiles.json")
 

@@ -8,24 +8,47 @@ from .cache import cache
 from .config import Config
 from .model import Itinerary, Path, Coord, UNSAFE
 import haversine as hs
+import re
+import sys
 
 MAX_DISTANCE = 10
 
-def profile_fullname(profile) :
-    if profile in Config.PROFILES :
-        return "custom_" + profile + Config.APP_ID
-    return profile
+def debug(*args, **kwargs):
+    if Config.FLASK_ENV == "development":
 
-def post_profile(profile) :
-    url = Config.BROUTER_ROOT + "/profile/" + profile_fullname(profile)
-    res = requests.post(url, Config.PROFILES[profile])
-    print("Posted", url, res)
+        if kwargs :
+            for key, val in kwargs.items():
+                args += "%s=%s" % (key, str(val)),
+
+        print(*args)
+
+def error(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+def profile_fullname(profile_name) :
+    if profile_name in Config.DEFAULT_PROFILES:
+        profile = render_profile(profile_name)
+        return "custom_" + profile_name + "_" + md5_hash(profile)
+    return profile_name
+
+def post_profile(profile_name) :
+
+    profile = render_profile(profile_name)
+    url = Config.BROUTER_ROOT + "/profile/" + profile_fullname(profile_name)
+    res = requests.post(url, profile)
+
     if res.status_code != 200:
+        debug("Upload failed !")
         raise HttpError(url, res.status_code, res.text)
 
 
+
+def md5_hash(val) :
+    return md5(val.encode("utf8")).hexdigest()
+
+
 @cache.memoize()
-def get_route(from_latlon, to_latlon, profile=None, alternative=0) :
+def get_route(from_latlon, to_latlon, profile=None, alternative=0):
 
     f_lat, f_lon = from_latlon
     t_lat, t_lon = to_latlon
@@ -38,21 +61,25 @@ def get_route(from_latlon, to_latlon, profile=None, alternative=0) :
 
     url = Config.BROUTER_ROOT + "?" + params
 
+
+
     res = requests.get(url)
+
+    debug("Calling Brouter ", url, res.status_code)
     if res.status_code == 200:
         res = process_message(res.json())
         res.alternative = alternative
         res.profile = profile
         return res
-    else :
+    else:
         raise HttpError(url, res.status_code, res.text)
 
 def get_route_safe(from_latlon, to_latlon, profile=None, alternative=0) :
 
-    try :
+    try:
         return get_route(from_latlon, to_latlon, profile, alternative)
     except HttpError as ex:
-        if ex.status == 500 and profile in Config.PROFILES:
+        if ex.status == 500 and profile in Config.DEFAULT_PROFILES:
             # Missing profile => upload it and try again
             post_profile(profile)
             return get_route(from_latlon, to_latlon, profile, alternative)
@@ -177,6 +204,38 @@ def purge_bad_itineraries(itis) :
         else:
             res.append(winner)
     return res
+
+
+PARAM_PATTERN=r"^\s*assign\s+(\w+)\s*=\s*(\S+)\s*(#\s*%(\w+)%.*)$"
+
+def valStr(val) :
+    if isinstance(val, bool) :
+        return "true" if val else "false"
+    return str(val)
+
+@cache.memoize()
+def render_profile(profile_name, **overrides) :
+    """Render profile file, replacing args with values"""
+    params = {
+        **Config.DEFAULT_PROFILES[profile_name],
+        **overrides}
+
+    debug("render_profile triggered for : %s" % profile_name, **params)
+
+    res = ""
+    with open("res/profile.txt", "r") as f:
+        for line in f:
+            match = re.match(PARAM_PATTERN, line)
+            if match:
+                vname, value, comment, pname = match.groups()
+                if pname in params :
+                    val = params[pname]
+                    res += "assign %s = %s %s" % (vname, valStr(val), comment)
+                    continue
+            res += line
+    return res
+
+
 
 
 

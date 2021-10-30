@@ -5,7 +5,7 @@ import json
 from lib.cache import cache
 from lib.config import Config
 from lib.utils import get_route, process_message, to_json, js_response, get_route_safe, HttpError, \
-    same_itineraries, is_worth, purge_bad_itineraries
+    same_itineraries, is_worth, purge_bad_itineraries, error
 
 app = Flask(__name__)
 
@@ -31,8 +31,6 @@ def get_itineraries():
 
     try:
 
-
-
         for profile in ["route"] if prof == "route" else ["route", "vtt"]:
             for alternative in range(1, 4):
                 iti = get_route_safe(start, end, profile, alternative)
@@ -41,10 +39,10 @@ def get_itineraries():
 
         itis = purge_bad_itineraries(itis)
 
-
     except HttpError as e:
         if e.status == 400:
             return "No itinerary found", 400
+        error("Error happened", e)
 
     car_distance = None
     try :

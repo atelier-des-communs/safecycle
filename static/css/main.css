@@ -18,6 +18,19 @@
     background-color: #e1f6ff;
 }
 
+#footer {
+    margin-top: 200px;
+    padding: 1em;
+    text-align: center;
+    background-color: #e1f6ff;
+}
+
+.container.about {
+    max-width: 600px;
+    margin:auto;
+    padding:3em;
+}
+
 #stripes {
     position: fixed;
     top:0px;

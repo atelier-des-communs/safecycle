@@ -63,9 +63,13 @@ const locationPickerCoords = {
     [END]:null
 }
 
-const itiGroups = {};
 
 var map = null;
+const PANES = {};
+var geojsonLayers = [];
+
+const TOP_PANE_ZINDEX = 440;
+const LOW_PANE_ZINDEX = 430;
 
 function initMap() {
 
@@ -78,6 +82,15 @@ function initMap() {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).setOpacity(0.7).addTo(map);
 
+
+    for (let profile of ["route", "vtt"]) {
+        for (let alternative of [1, 2, 3, 4]) {
+            let id = profile + "-" + alternative;
+            let pane = map.createPane(id);
+            pane.style.zIndex = LOW_PANE_ZINDEX;
+            PANES[id] = pane
+        }
+    }
 
     let legend = L.control({position: 'topright'});
 
@@ -302,10 +315,10 @@ function selectItinerary(id) {
 }
 
 function cleanMap() {
-    Object.entries(itiGroups).forEach(([key, groupLayer]) => {
-        map.removeLayer(groupLayer)
-        delete itiGroups[key];
-    });
+    for (let layer of geojsonLayers) {
+        map.removeLayer(layer);
+    }
+    geojsonLayers = [];
 }
 
 function highlightIti(over_id) {
@@ -314,13 +327,16 @@ function highlightIti(over_id) {
         return (id === over_id) || (id === state.selected) ;
     }
 
+    // Highlight on map
     if (state.itineraries) for (let iti of state.itineraries) {
-        // Highlight on map
-        itiGroups[iti.id].eachLayer(function (layer) {
-            layer.setStyle({opacity: (isHighlighted(iti.id) || (!state.selected && !over_id)) ? 1: 0.2});
-        });
+        let highlighted = (isHighlighted(iti.id) || (!state.selected && !over_id));
+
+        // Highlight the panes containing the itinerary
+        PANES[iti.id].style.opacity = highlighted ? 1: 0.4;
+        PANES[iti.id].style.zIndex = highlighted ? TOP_PANE_ZINDEX : LOW_PANE_ZINDEX;
     }
 
+    // Highlight on list
     $(".iti-item").each(function () {
         let iti_id = $(this).attr("data-iti-id");
         $(this).toggleClass("highlighted", isHighlighted(iti_id));
@@ -347,13 +363,10 @@ function updateMap() {
 
     function drawIti(iti) {
 
-        const polys = []
+        function addPoly(poly) {
 
-
-        function setupHover(path, poly) {
-            const content =  Object.entries(path.tags).
-                map(([k, v], _) => "<h1>" + k + "</h1> :" + v + "<br/>").
-                join("\n");
+            poly.addTo(map);
+            geojsonLayers.push(poly)
 
             //poly.bindTooltip(content, {sticky:true})
             poly.on('mouseover', function()  {
@@ -374,23 +387,24 @@ function updateMap() {
 
             const transpLine = L.geoJSON(
                 toGeoJson(path),
-                {style: {
+                {   pane : iti.id,
+                    style: {
                         weight: 20,
                         color: "rgba(0,0,0,0)",
                         className}
                 });
+            addPoly(transpLine);
 
             const blackLine = L.geoJSON(
                 toGeoJson(path),
-                {style: {
+                {   pane:iti.id,
+                    style: {
                         weight: 8,
                         color: "black",
                         className}
                 });
 
-            setupHover(path, transpLine);
-            setupHover(path, blackLine);
-            polys.push(transpLine, blackLine);
+            addPoly(blackLine);
         });
 
         const styleFn = function (js) {
@@ -401,17 +415,17 @@ function updateMap() {
             };
         }
 
-        // Add thin line with color for security
+        // Add thin line with color for path type
         iti.paths.forEach(function (path) {
             const poly = L.geoJSON(
                 toGeoJson(path),
-                {style: styleFn});
+                {
+                    style: styleFn,
+                    pane: iti.id});
 
-            setupHover(path, poly);
-            polys.push(poly);
+            addPoly(poly);
         });
 
-        itiGroups[iti.id] = L.layerGroup(polys).addTo(map);
     }
     state.itineraries.forEach(drawIti);
 
@@ -429,7 +443,7 @@ function updateMap() {
 function urlUpdated() {
     let urlParams = new URLSearchParams(window.location.search);
     state.vae = urlParams.get("vae") === "true";
-    state.vtt = urlParams.get("profile") || "vtt";
+    state.vtt = urlParams.get("profile") ? (urlParams.get("profile") === "vtt") : true;
     state.sort = urlParams.get("sort") || "safe";
     state.selected = window.location.hash.replace("#", "");
 

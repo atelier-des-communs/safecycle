@@ -10,6 +10,7 @@ from .model import Itinerary, Path, Coord, UNSAFE
 import haversine as hs
 import re
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 MAX_DISTANCE = 10
 
@@ -70,6 +71,7 @@ def get_route(from_latlon, to_latlon, profile=None, alternative=0):
         res = process_message(res.json())
         res.alternative = alternative
         res.profile = profile
+        res.id = "%s-%d" %(profile,  alternative)
         return res
     else:
         raise HttpError(url, res.status_code, res.text)
@@ -234,6 +236,23 @@ def render_profile(profile_name, **overrides) :
                     continue
             res += line
     return res
+
+def get_all_itineraries(start, end, profile_type):
+
+    profiles = ["route"] if profile_type == "route" else ["route", "vtt"]
+    alternatives = range(1, 4)
+
+    combinations = [(prof, alt) for prof in profiles for alt in alternatives]
+
+    def process_fn(args):
+        prof, alt = args
+        return get_route_safe(start, end, prof, alt)
+
+    # Execute in parallel
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        itis = list(executor.map(process_fn, combinations))
+        return purge_bad_itineraries(itis)
+
 
 
 

@@ -1,9 +1,15 @@
+<!doctype html>
 <html lang="fr">
 <head>
     <title>SafeCycle - Itinéraire pour vélo, centré sur la sécurité</title>
 
     <meta name="description" content="Itinéraire pour vélo, centré sur la sécurité" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta property="og:title" content="SafeCycle" />
+    <meta property="og:description" content="Itinéraire pour vélo, centré sur la sécurité" />
+    <meta property="og:image" content="{{ url_for("static", filename="img/cover.png", _external=True) }}" />
 
     <link rel="stylesheet"
           href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"

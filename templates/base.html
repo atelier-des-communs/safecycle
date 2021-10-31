@@ -11,22 +11,13 @@
     <meta property="og:description" content="Itinéraire pour vélo, centré sur la sécurité, gratuit & open source" />
     <meta property="og:image" content="{{ url_for("static", filename="img/cover.jpg", _external=True, _scheme='https') }}" />
 
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-          integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-            crossorigin=""/>
-
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css"
-          integrity="sha384-B0vP5xmATw1+K9KRQjQERJvTumQW0nPEzvF6L/Z6nronJ3oUOFUFpCjEUQouq2+l" crossorigin="anonymous">
-
+    <link rel="stylesheet" href="{{ url_for("static", filename="leaflet/leaflet.css")}}" />
+    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap/css/bootstrap.css")}}" />
+    <link rel="stylesheet" href="{{ url_for("static", filename="bootstrap-icons/bootstrap-icons.css")}}"  />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
 
-     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-       crossorigin=""></script>
+    <script src="{{ url_for("static", filename="leaflet/leaflet.js")}}" ></script>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.6.1/font/bootstrap-icons.css">
 </head>
 
 <body>

@@ -4,8 +4,9 @@ import json
 
 from lib.cache import cache
 from lib.config import Config
-from lib.utils import get_route, process_message, to_json, js_response, get_route_safe, HttpError, \
-    same_itineraries, is_worth, purge_bad_itineraries, error, get_all_itineraries
+from lib.utils import *
+
+from flask_compress import Compress
 
 app = Flask(__name__)
 
@@ -13,8 +14,8 @@ app.config.update(Config.__dict__)
 
 cache.init_app(app)
 
-TO = (43.61531, 7.052784)
-FROM  = (43.623687, 7.013062)
+Compress(app)
+
 
 @app.route("/")
 def index():

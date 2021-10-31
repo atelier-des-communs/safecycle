@@ -112,29 +112,12 @@
 
 {%  endraw %}
 
-<script
-        src="https://code.jquery.com/jquery-3.6.0.min.js"
-        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
-        crossorigin="anonymous"></script>
+    <script src="{{ url_for("static", filename="js/jquery-3.6.0.min.js" )}}" ></script>
+    <script src="{{ url_for("static", filename="js/popper.min.js" )}}" ></script>
+    <script src="{{ url_for("static", filename="js/jsrender.min.js" )}}" ></script>
+    <script src="{{ url_for("static", filename="bootstrap/js/bootstrap.js" )}}" ></script>
+    <script src="{{ url_for("static", filename="js/bootstrap-autocomplete.min.js" )}}" ></script>
 
-<script
-        src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
-        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
-        crossorigin="anonymous"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"
-        integrity="sha384-+YQ4JLhjyBLPDQt//I+STsc9iw4uQqACwlvpslubQzn4u2UU2UFM80nGisd026JF"
-        crossorigin="anonymous"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsrender/1.0.11/jsrender.min.js"
-        integrity="sha512-bKlNlbTH3duwZ28zoqEhXui/yuaPuQVci6OAVu0zh2WfYbEKD39HszVR8byP4/L4YyBo3b5CGIY+4ldVN93uCg=="
-        crossorigin="anonymous"
-        referrerpolicy="no-referrer"></script>
-
-<script src="https://cdn.jsdelivr.net/gh/xcash/bootstrap-autocomplete@v2.3.7/dist/latest/bootstrap-autocomplete.min.js">
-
-</script>
-
-<script src="{{ url_for('static', filename='js/main.js') }}" ></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}" ></script>
 
 {% endblock %}

@@ -21,6 +21,9 @@ class Config:
 
     CACHE_DEFAULT_TIMEOUT = 24*3600
 
+    SEND_FILE_MAX_AGE_DEFAULT = 24 * 3600
+
+
     FLASK_ENV = env("FLASK_ENV")
 
     DEFAULT_PROFILES = load_js("res/default_profiles.json")

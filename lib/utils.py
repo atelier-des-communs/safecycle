@@ -171,8 +171,11 @@ def unsafe_distance(iti) :
 
     return res
 
-def is_worth(iti, other_iti) :
-    return not (iti.time > other_iti.time and unsafe_distance(iti) > unsafe_distance(other_iti))
+
+
+def not_worth(iti, other_iti) :
+    """Return false if iti is almost similar or worse then other_iti for both KPI"""
+    return iti.time > other_iti.time - Config.SIGNIFICANT_TIME_DIFF and unsafe_distance(iti) > unsafe_distance(other_iti) - Config.SIGNIFICANT_SAFE_DIFF
 
 def same_itineraries(iti1, iti2) :
     if len(iti1.paths) != len(iti2.paths) :
@@ -192,7 +195,7 @@ def purge_bad_itineraries(itis) :
 
     for iti in itis :
         for other_iti in itis :
-            if iti != other_iti and not is_worth(iti, other_iti) :
+            if iti != other_iti and not_worth(iti, other_iti) :
                 break
         else :
             winners.append(iti)

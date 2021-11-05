@@ -40,6 +40,9 @@ const typeNames = {
     [LOW_TRAFFIC] : "traffic faible"
 }
 
+VIEW_SAFETY = 'safety'
+VIEW_SLOPE = 'slope'
+
 const state = {
     coords : {
         [START]:null,
@@ -50,7 +53,8 @@ const state = {
     itineraries:null,
     sort : SortType.SAFE,
     selected : null,
-    estimatesClosed : false
+    estimatesClosed : false,
+    view : VIEW_SLOPE,
 }
 
 const markers = {
@@ -62,6 +66,12 @@ const locationPickerCoords = {
     [START]:null,
     [END]:null
 }
+
+MAX_SLOPE = 20
+MIN_SLOPE= -20
+MAX_SLOPE_COLOR = [237, 95, 95]
+MIN_SLOPE_COLOR = [121, 95, 237]
+ZERO_SLOPE_COLOR = [95, 237, 135]
 
 
 var map = null;
@@ -125,6 +135,24 @@ L.Control.ClearButton = L.Control.extend({
     },
 });
 
+function slopeColor(slope) {
+    let otherColor, extreme;
+    if (slope >= 0) {
+        slope = Math.min(MAX_SLOPE, slope)
+        otherColor = MAX_SLOPE_COLOR;
+        extreme = MAX_SLOPE
+    } else {
+        slope = -Math.max(MIN_SLOPE, slope)
+        otherColor = MIN_SLOPE_COLOR;
+        extreme = -MIN_SLOPE
+    }
+    let color = [0, 0, 0]
+    let color2 = "#ffffff";
+    for (let i=0; i<3; i++) {
+        color[i] = parseInt((otherColor[i] - ZERO_SLOPE_COLOR[i]) * (slope / extreme) + ZERO_SLOPE_COLOR[i])
+    }
+    return 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')'
+}
 
 function initMap() {
 
@@ -254,6 +282,9 @@ function computeDrops(iti) {
         negative:Math.round(negative)}
 }
 
+const PREVIEW_WIDTH = 400;
+const ELEVATION_PER_PIXEL = 2.5;
+
 function updateList() {
 
     var economy = 0;
@@ -285,18 +316,48 @@ function updateList() {
 
         const shares = [];
 
-        for (const key in iti.shares) {
+        for (let key in iti.shares) {
             const percentage = iti.shares[key] * 100;
+            let distance = iti.length *  iti.shares[key]
             if (percentage > 0) {
                 shares.push({
+                    width : (distance / max_distance * PREVIEW_WIDTH).toFixed(),
                     percentage : Math.round(percentage),
-                    distance: iti.length *  iti.shares[key],
+                    distance,
                     safe: safe_types.indexOf(key),
                     color: typeColors[key],
                     label : typeNames[key],
                     type:key,
                 });
             }
+        }
+
+        let distance = 0;
+        let slopes = [];
+        let minElevation = Math.min(...iti.paths.map((path) => (path.coords.length === 0) ? 5000 : path.coords[0].elevation));
+        let maxElevation = Math.max(...iti.paths.map((path) => (path.coords.length === 0) ? 0 : path.coords[0].elevation));
+
+        let height = (maxElevation - minElevation) / ELEVATION_PER_PIXEL;
+
+        function point(x, y) {
+            return x.toFixed() + "," + (height - y).toFixed()
+        }
+
+        for (let path of iti.paths) {
+            if (path.coords.length < 1) {continue}
+            let color = slopeColor(path.slope);
+            let coord1  = path.coords[0];
+            let coord2 = path.coords[path.coords.length-1];
+            let x1 = distance / max_distance * PREVIEW_WIDTH;
+            let x2 = (distance + path.length) / max_distance * PREVIEW_WIDTH;
+            distance += path.length;
+            let y1 = (coord1.elevation - minElevation) / ELEVATION_PER_PIXEL;
+            let y2 = (coord2.elevation - minElevation) / ELEVATION_PER_PIXEL;
+
+            slopes.push({
+                points: [point(x1, 0), point(x1, y1), point(x2, y2), point(x2, 0)].join(" "),
+                color: slopeColor(path.slope)
+            });
         }
 
         shares.sortOn(share => types_order.indexOf(share.type))
@@ -312,8 +373,11 @@ function updateList() {
 
         return {
             id:iti.id,
+            height,
+            width:PREVIEW_WIDTH,
             time,
             shares,
+            slopes,
             gpx_url,
             kml_url,
             drops,
@@ -405,6 +469,7 @@ function updateMap() {
             "properties": {
                 tags: path.tags,
                 type: path.type,
+                slope : path.slope,
             },
             "geometry": {
                 "type": "LineString",
@@ -460,10 +525,13 @@ function updateMap() {
         });
 
         const styleFn = function (js) {
+
+            let color = (state.view === VIEW_SLOPE) ?
+                slopeColor(js.properties.slope) :
+                typeColors[js.properties.type];
+
             return {
-                weight:4,
-                color :typeColors[js.properties.type],
-                className
+                weight:4, color, className
             };
         }
 

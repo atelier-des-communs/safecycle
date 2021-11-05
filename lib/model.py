@@ -55,8 +55,17 @@ class Path :
 
         return LOW
 
-    def __json__(self) :
-        return {**self.__dict__, "type":self.type()}
+
+    def slope(self):
+        if len(self.coords) < 2 or self.length == 0:
+            return 0
+        return (self.coords[-1].elevation - self.coords[0].elevation) / self.length * 100
+
+    def __json__(self):
+        return {
+            **self.__dict__,
+            "type": self.type(),
+            "slope" : self.slope()}
 
 
 class Itinerary:

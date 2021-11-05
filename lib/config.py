@@ -23,6 +23,12 @@ class Config:
 
     SEND_FILE_MAX_AGE_DEFAULT = 24 * 3600
 
+    # In seconds
+    SIGNIFICANT_TIME_DIFF = int(env("RELEVANT_TIME_DIFF", 30))
+
+    # In meters
+    SIGNIFICANT_SAFE_DIFF = int(env("RELEVANT_SAFE_DIFF", 0))
+
 
     FLASK_ENV = env("FLASK_ENV")
 

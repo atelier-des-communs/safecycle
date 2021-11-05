@@ -100,7 +100,7 @@
     {{/if }}
 
 
-    {{for itineraries }}
+    {{for itineraries itemVar="~iti" }}
     <li class="list-group-item iti-item mb-3" data-iti-id="{{:id }}">
         <div class="dropleft float-right">
             <button class="btn btn-light" type="button"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -125,7 +125,11 @@
                 {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }}
             </span>
         </h5>
-        {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{: (distance / ~root.max_distance * 300).toFixed() }}px; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
+        {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{: width }}px; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
+
+        <svg height="{{:~iti.height }}" width="{{: ~iti.width }}">
+            {{for slopes }}<polygon points="{{:points}}" style="fill:{{:color}}" />{{/for}}
+        </svg>
     </li>
     {{/for}}
 </script>

@@ -20,14 +20,16 @@ assign mountainBike = false # %mountainBike% | Set to True if using moutainbike 
 assign electric = false # %electric% | Set to True if using electric bike
 
 # Change elevation parameters
-assign consider_elevation = true  # %consider_elevation% | Set to false to ignore elevation in routing | boolean
-assign downhillcost       = 60    # %downhillcost% | Cost for going downhill | number
+assign consider_elevation = false  # %consider_elevation% | Set to false to ignore elevation in routing | boolean
+assign downhillcost       = 0    # %downhillcost% | Cost for going downhill | number
 assign downhillcutoff     = 1.5   # %downhillcutoff% | Gradients below this value in percents are not counted. | number
-assign uphillcost         = 0     # %uphillcost% | Cost for going uphill | number
-assign uphillcutoff       = 1.5   # %uphillcutoff% | Gradients below this value in percents are not counted.  | number
 
-assign downhillcost       = if consider_elevation then downhillcost else 0
-assign uphillcost         = if consider_elevation then uphillcost else 0
+assign uphillcost         = 0     # %uphillcost% | Cost for going uphill | number
+assign uphillcutoff       = 7   # %uphillcutoff% | Gradients below this value in percents are not counted.  | number
+
+#assign downhillcost       = if consider_elevation then downhillcost else 0
+#assign uphillcost         = if consider_elevation then uphillcost else 0
+
 assign trackCost = if mountainBike then 1 else 10
 
 # Kinematic model parameters (travel time computation)

@@ -19,10 +19,15 @@
                         </div>
                         <select  class="form-control location-input" id="input-start" data-end="start" placeholder="Départ (ou clic sur carte)">
                         </select>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary current-location" data-end="start" type="button">
+                                <img src="/static/img/current-location.svg">
+                            </button>
+                        </div>
                     </div>
 
                     <div class="input-group location-input-group" data-end="end">
-                        <div class="input-group-prepend">
+                        <div class="input-group-prepend" title="Votre position actuelle">
                             <div class="input-group-text">
                                 <span class="spinner-border spinner-border-sm spinner" role="status" aria-hidden="true"></span>
                                 <i class="bi-geo-alt-fill no-spinner" style="color:red"></i>
@@ -30,19 +35,24 @@
                         </div>
                         <select  class="form-control location-input" id="input-end" data-end="end" placeholder="Arrivée (ou clic sur carte)">
                         </select>
+                        <div class="input-group-append" title="Votre position actuelle">
+                            <button class="btn btn-outline-secondary current-location" data-end="end" type="button">
+                                <img src="/static/img/current-location.svg">
+                            </button>
+                        </div>
                     </div>
 
         </form>
 
         <div class="center-container">
-            <form class="form-inline ">
+            <form class="form-inline mb-3">
 
-                <div class="custom-control custom-switch mr-3">
+                <div class="custom-control custom-switch mr-3" title="Route avec chemins (VTT)">
                     <input type="checkbox" class="custom-control-input" id="vtt-switch">
                     <label class="custom-control-label" for="vtt-switch">VTT</label>
                 </div>
 
-                <div class="custom-control custom-switch mr-3">
+                <div class="custom-control custom-switch mr-3"  title="Vélo électrique">
                     <input type="checkbox" class="custom-control-input" id="vae-switch">
                     <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> VAE</label>
                 </div>
@@ -92,8 +102,18 @@
 
     {{for itineraries }}
     <li class="list-group-item iti-item mb-3" data-iti-id="{{:id }}">
+        <div class="dropleft float-right">
+            <button class="btn btn-light" type="button"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <i class="bi-share-fill"></i>
+            </button>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" type="button" href="{{:gpx_url }}"><i class="bi-download"></i> GPX</a>
+                <a class="dropdown-item" type="button" href="{{:kml_url }}"><i class="bi-download"></i> KML (Google Maps)</a>
+            </div>
+        </div>
         <h5>
-            <a title="trace GPX" href="{{:gpx_url}}" type="button" class="btn btn-sm btn-light float-right"><i class="bi-file-earmark-arrow-down"></i></a>
+
+
             <span title="Distance"><i class="bi-signpost" ></i> {{:distance }} km</span>
             <span title="Temps" class="ml-2" ><i class="bi-stopwatch" ></i> {{:time}}</span>
             {{if unsafe > 0 }}

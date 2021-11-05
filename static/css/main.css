@@ -150,3 +150,12 @@ br.responsive {
 .hidden {
     display:none;
 }
+
+#map button.current-location {
+    padding: 3px;
+}
+
+.current-location img {
+    width:20px;
+    height:20px;
+}

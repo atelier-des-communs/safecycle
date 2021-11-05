@@ -71,6 +71,61 @@ var geojsonLayers = [];
 const TOP_PANE_ZINDEX = 440;
 const LOW_PANE_ZINDEX = 430;
 
+L.Control.Legend = L.Control.extend({
+    onAdd : function (map) {
+        let types  = types_order.map(type => ({
+            color:typeColors[type],
+            name: typeNames[type]}))
+        let html = renderTemplate("#legend-template", {types});
+
+        let res = $(html);
+
+        $("button.toggle-legend", res).click(function(e) {
+            let hidden = $(".legend-content").hasClass("hidden");
+            $(this).text(hidden ? "-" : "+")
+            $(".legend-content").toggleClass("hidden", !hidden);
+            e.stopPropagation();
+        });
+
+        return res.get(0);
+    }
+});
+
+L.Control.CurrentLocationButton = L.Control.extend({
+    onAdd : function (map) {
+
+        let res = $("<button class='btn btn-light btn-sm current-location' type='button' title='Centrer sur votre position actuelle'>" +
+            "<img src='/static/img/current-location.svg'/>" +
+            "</button>");
+
+        res.click(function(e) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                map.setView([position.coords.latitude, position.coords.longitude], INIT_ZOOM+3);
+            });
+            e.stopPropagation();
+        });
+
+        return res.get(0);
+    },
+});
+
+L.Control.ClearButton = L.Control.extend({
+    onAdd : function (map) {
+
+        let res = $('<button class="btn btn-light btn-sm reset" type="button" title="Supprimer l\'itinéraire">' +
+            "<i class='bi bi-trash'" +
+            "</button>");
+
+        res.click(function(e) {
+           reset();
+           e.stopPropagation()
+        });
+
+        return res.get(0);
+    },
+});
+
+
 function initMap() {
 
     let map = L.map('map',
@@ -92,23 +147,9 @@ function initMap() {
         }
     }
 
-    let legend = L.control({position: 'topright'});
-
-    legend.onAdd = function (map) {
-        let types  = types_order.map(type => ({
-            color:typeColors[type],
-            name: typeNames[type]}))
-        let html = renderTemplate("#legend-template", {types});
-        return $(html).get(0);
-    };
-
-    legend.addTo(map);
-
-    $("button.toggle-legend").click(function() {
-        let hidden = $(".legend-content").hasClass("hidden");
-        $(this).text(hidden ? "-" : "+")
-        $(".legend-content").toggleClass("hidden", !hidden);
-    });
+    new L.Control.Legend({position: 'topright'}).addTo(map);
+    new L.Control.CurrentLocationButton({position: 'topleft'}).addTo(map);
+    new L.Control.ClearButton({position: 'topleft'}).addTo(map);
 
     map.on("click", onMapClick);
     return map;
@@ -121,7 +162,15 @@ function latlng2latlon(latlng) {
     return {lat:latlng.lat, lon:latlng.lng}
 }
 
+function reset() {
+    state.coords[START] = null
+    state.coords[END] = null;
+    stateUpdated();
+}
+
 function createOrUpdateMarker(end, latlon) {
+
+    let latlng = latlon2latLng(latlon)
 
     // Create if not done already
     if (!markers[end]) {
@@ -134,7 +183,7 @@ function createOrUpdateMarker(end, latlon) {
             shadowSize: [41, 41]
         });
 
-        const marker = L.marker(latlon2latLng(latlon), {
+        const marker = L.marker(latlng, {
                 icon,
                 draggable: true,
                 autoPan: true
@@ -145,9 +194,14 @@ function createOrUpdateMarker(end, latlon) {
         });
 
         markers[end] = marker;
+
+        // Move map if marker not visible
+        if (!map.getBounds().contains(latlng)) {
+            map.setView(latlng);
+        }
     }
 
-    markers[end].setLatLng(latlon2latLng(latlon));
+    markers[end].setLatLng(latlng);
 }
 
 function updateCoord(end, latlon) {
@@ -201,9 +255,6 @@ function computeDrops(iti) {
 }
 
 function updateList() {
-    if (!state.itineraries) {
-        return;
-    }
 
     var economy = 0;
     var carbon = 0;
@@ -212,13 +263,12 @@ function updateList() {
         carbon = Math.floor(2 * NB_DAYS_PER_YEAR * CO2_PER_KM * state.car_distance / 1000)
     }
 
-    let sortedIti = [...state.itineraries]
+    let sortedIti = state.itineraries ? [...state.itineraries] : [];
     sortedIti.sortOn(function (iti) {
         return (state.sort === SortType.SAFE) ? (unsafeDistance(iti)) : iti.time;
     })
 
-
-    let max_distance = Math.max(...sortedIti.map(iti => iti.length ));
+    let max_distance = Math.max(...sortedIti.map(iti => iti.length));
 
     const templateData = sortedIti.map(function (iti) {
 
@@ -257,6 +307,7 @@ function updateList() {
             ...encodeCoords()
         }
         let gpx_url = "/api/gpx?" + encodeParams(gpx_params);
+        let kml_url = "/api/kml?" + encodeParams(gpx_params);
         let drops = computeDrops(iti);
 
         return {
@@ -264,6 +315,7 @@ function updateList() {
             time,
             shares,
             gpx_url,
+            kml_url,
             drops,
             unsafe :(unsafeDistance(iti) /1000),
             distance: (iti.length/1000).toFixed(1)}
@@ -427,16 +479,20 @@ function updateMap() {
         });
 
     }
-    state.itineraries.forEach(drawIti);
 
-    let minLat = Math.min(state.coords[START].lat, state.coords[END].lat);
-    let maxLat = Math.max(state.coords[START].lat, state.coords[END].lat);
-    let minLon = Math.min(state.coords[START].lon, state.coords[END].lon);
-    let maxLon = Math.max(state.coords[START].lon, state.coords[END].lon);
-    map.fitBounds([
-        [minLat, minLon],
-        [maxLat, maxLon]
-    ]);
+    if (state.itineraries) {
+
+        state.itineraries.forEach(drawIti);
+
+        let minLat = Math.min(state.coords[START].lat, state.coords[END].lat);
+        let maxLat = Math.max(state.coords[START].lat, state.coords[END].lat);
+        let minLon = Math.min(state.coords[START].lon, state.coords[END].lon);
+        let maxLon = Math.max(state.coords[START].lon, state.coords[END].lon);
+        map.fitBounds([
+            [minLat, minLon],
+            [maxLat, maxLon]
+        ]);
+    }
 }
 
 // Transform to state and update UI
@@ -473,6 +529,12 @@ function stateUpdatedNoUrl() {
     for (let end of [START, END]) {
         if (state.coords[end]) {
             createOrUpdateMarker(end, state.coords[end]);
+        } else {
+            // Coord not set but marker here
+            if (markers[end]) {
+                map.removeLayer(markers[end]);
+                markers[end] = null;
+            }
         }
     }
 
@@ -481,6 +543,8 @@ function stateUpdatedNoUrl() {
     // Both marker setup ? => disable click on map
     if (state.coords[START] && state.coords[END]) {
         map.off("click", onMapClick);
+    } else {
+        map.on("click", onMapClick);
     }
 }
 
@@ -491,7 +555,11 @@ function updateItineraryFromState() {
 
     // Only fetch itinerary when both marker are set
     if (!start|| !end) {
-        return
+        state.itineraries = null;
+        state.car_distance = null;
+        updateList();
+        updateMap();
+        return;
     }
 
     let url = "/api/itineraries?" + encodeParams ({
@@ -673,8 +741,19 @@ function setupAutocomplete() {
 
     $('.location-input').on("autocomplete.select", function(e, item) {
         let end = $(this).attr("id").split("-")[1];
-        console.log(end, item)
         updateCoord(end, item.value);
+    });
+
+    $('.current-location[data-end]').on("click", function(e, item) {
+        let end = $(this).attr("data-end");
+        navigator.geolocation.getCurrentPosition(function(position) {
+            let pos = {
+                lat : position.coords.latitude,
+                lon : position.coords.longitude
+            }
+            updateCoord(end, pos);
+        });
+
     });
 
 

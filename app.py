@@ -51,8 +51,7 @@ def get_itineraries():
         itineraries=itis,
         car_distance=car_distance))
 
-@app.route("/api/gpx")
-def gpx() :
+def export(template, mime) :
 
     start = list(map(lambda s: float(s), request.args["start"].split(",")))
     end = list(map(lambda s: float(s), request.args["end"].split(",")))
@@ -62,16 +61,24 @@ def gpx() :
     iti = get_route_safe(start, end, profile, alternative)
 
     points = []
-    for path in iti.paths :
+    for path in iti.paths:
         points += path.coords[0:-1]
     points.append(iti.paths[-1].coords[-1])
 
-    out = render_template("route.xml", points=points)
+    out = render_template(template, points=points)
 
     return Response(
         out,
-        mimetype="application/gpx+xml",
-        headers={'Content-Disposition' : 'attachment;filename=route.gpx'})
+        mimetype=mime,
+        headers={'Content-Disposition': 'attachment;filename=' + template})
+
+@app.route("/api/gpx")
+def gpx():
+    return export("route.gpx", "application/gpx+xml")
+
+@app.route("/api/kml")
+def kml():
+    return export("route.kml", "application/vnd.google-earth.kml+xml")
 
 
 if __name__ == '__main__':

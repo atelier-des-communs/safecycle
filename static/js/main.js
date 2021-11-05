@@ -405,6 +405,8 @@ function updateList() {
             gpx_url,
             kml_url,
             drops,
+            minElevation:minElevation.toFixed(),
+            maxElevation:maxElevation.toFixed(),
             sort:state.sort,
             view:state.view,
             unsafe :(unsafeDistance(iti) /1000),

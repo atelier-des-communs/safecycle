@@ -139,16 +139,18 @@
                     <i class="bi-exclamation-diamond-fill warning"></i> {{:unsafe.toFixed(2) }} km
                 </span>
             {{/if}}
-            <span title="Dénivelé : {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }} / {{if drops.negative > 0 }} -{{: drops.negative }}m {{/if }}" class="ml-2" ><i class="bi-graph-up" ></i>
+            <span title="Dénivelé cumulé : {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }} / {{if drops.negative > 0 }} -{{: drops.negative }}m {{/if }}" class="ml-2" ><i class="bi-graph-up" ></i>
                 {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }}
             </span>
         </h5>
         {{if view == "safety" }}
             {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{: width }}px; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
         {{else}}
-            <svg height="{{:~iti.height }}" width="{{: ~iti.width }}">
-                {{for slopes }}<polygon points="{{:points}}" style="fill:{{:color}}" />{{/for}}
-            </svg>
+            <div title="Min: {{:~iti.minElevation }}m, Max: {{:~iti.maxElevation }}m">
+                <svg height="{{:~iti.height }}" width="{{: ~iti.width }}" >
+                    {{for slopes }}<polygon points="{{:points}}" style="fill:{{:color}}" />{{/for}}
+                </svg>
+            </div>
         {{/if}}
     </li>
     {{/for}}

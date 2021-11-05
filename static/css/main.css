@@ -148,7 +148,7 @@ br.responsive {
 }
 
 .hidden {
-    display:none;
+    display:none !important;
 }
 
 #map button.current-location {
@@ -158,4 +158,31 @@ br.responsive {
 .current-location img {
     width:20px;
     height:20px;
+}
+
+.collapsed-visible {
+    display: none;
+}
+
+.collapsed .collapsed-visible {
+    display: block;
+}
+.collapsed .collapsed-hidden {
+    display: none ! important;
+}
+
+.legend.info {
+    cursor: pointer;
+}
+
+.legend-slope {
+    display: none;
+}
+
+.view-slope .legend-safety {
+    display: none;
+}
+
+.view-slope .legend-slope {
+    display: block;
 }

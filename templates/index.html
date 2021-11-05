@@ -42,46 +42,39 @@
                         </div>
                     </div>
 
+                     <div class="custom-control custom-switch m-2" title="Route avec chemins (VTT)">
+                        <input type="checkbox" class="custom-control-input" id="vtt-switch">
+                        <label class="custom-control-label" for="vtt-switch">Route avec Chemins (VTT)</label>
+                    </div>
+
+                    <div class="custom-control custom-switch m-2"  title="Vélo électrique">
+                        <input type="checkbox" class="custom-control-input" id="vae-switch">
+                        <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> Vélo électrique</label>
+                    </div>
+
         </form>
 
-        <div class="center-container">
-            <form class="form-inline mb-3">
+        <div id="list-placeholder" ></div>
 
-                <div class="custom-control custom-switch mr-3" title="Route avec chemins (VTT)">
-                    <input type="checkbox" class="custom-control-input" id="vtt-switch">
-                    <label class="custom-control-label" for="vtt-switch">VTT</label>
-                </div>
-
-                <div class="custom-control custom-switch mr-3"  title="Vélo électrique">
-                    <input type="checkbox" class="custom-control-input" id="vae-switch">
-                    <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> VAE</label>
-                </div>
-
-                <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons">
-                    <label class="btn btn-sm btn-outline-primary sort-button" data-sort="safe">
-                        <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe"> plus sûr
-                    </label>
-                    <label class="btn btn-sm btn-outline-primary sort-button" data-sort="fast" >
-                        <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast"> plus rapide
-                    </label>
-                </div>
-
-            </form>
-        </div>
-
-        <ul class="list-group mr-2" id="list-placeholder">
-
-        </ul>
     </div>
 </div>
 
 {% raw %}
 <script id="legend-template" type="text/html">
     <div class="info legend">
-        <button type="button" class="btn btn-sm btn-compact btn-tiny float-right toggle-legend">-</button>
-        <div class="legend-content" >
-        {{for types }}
-            <i style="background:{{: color }}"></i> {{: name }} <br/>
+        <span class="collapsed-visible">-</span>
+        <div class="legend-content legend-safety collapsed-hidden" >
+        {{for safety_types }}
+            <div>
+                <i style="background:{{: color }}"></i>&nbsp;{{: name }}
+            </div>
+        {{/for }}
+        </div>
+        <div class="legend-content legend-slope collapsed-hidden" >
+        {{for slope_types }}
+            <div>
+                <i style="background:{{: color }}"></i>&nbsp;{{: name }}
+            </div>
         {{/for }}
         </div>
     </div>
@@ -90,14 +83,39 @@
 
 <script id="itinerary-template" type="text/html">
 
-    {{if !closed && (economy > 0) }}
-    <li class="list-group-item mb-5 velotaf-info">
-        <button type="button "class="btn btn-sm btn-light float-right close-estimates"><i class="bi-x"></i></button>
-        <p><i class="bi-lightbulb"></i> Economies pour <abbr title="220 jours ouvrés">1 an</abbr> de vélotaf :</p>
-        <span title="économies financières" ><i class="bi-piggy-bank"></i> <b>{{:economy }} €</b></span>
-        <span title="économies carbonne" ><i class="bi-tree"></i> <b> {{:carbon }} Kg CO2<br/></b></span>
-    </li>
-    {{/if }}
+    {{if itineraries.length > 0 }}
+    <div class="center-container">
+        <form class="form-inline mb-3">
+
+            <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons" title="Tri au plus sûr">
+                <label class="btn btn-sm btn-outline-primary sort-button" data-sort="safe">
+                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe" > plus sûr
+                </label>
+                <label class="btn btn-sm btn-outline-primary sort-button" data-sort="fast"  title="Tri au plus rapide">
+                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast" > plus rapide
+                </label>
+            </div>
+
+            <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons">
+                <label class="btn btn-sm btn-outline-primary view-button" data-view="safety" title="Voir les types de route">
+                    <input type="radio" name="view" id="sort-safe" autocomplete="off" value="safety" >
+                    <i class="bi-exclamation-diamond-fill" ></i>
+                    &nbsp; sureté
+                </label>
+                <label class="btn btn-sm btn-outline-primary view-button" data-view="slope" title="Voir le dénivelé">
+                    <input type="radio" name="view" id="sort-fast" autocomplete="off" value="slope" >
+                    <i class="bi-graph-up" ></i>
+                    &nbsp; pentes
+                </label>
+            </div>
+
+        </form>
+    </div>
+    {{/if}}
+
+    <ul class="list-group mr-2" id="list-placeholder">
+
+
 
 
     {{for itineraries itemVar="~iti" }}
@@ -125,13 +143,26 @@
                 {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }}
             </span>
         </h5>
-        {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{: width }}px; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
-
-        <svg height="{{:~iti.height }}" width="{{: ~iti.width }}">
-            {{for slopes }}<polygon points="{{:points}}" style="fill:{{:color}}" />{{/for}}
-        </svg>
+        {{if view == "safety" }}
+            {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{: width }}px; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
+        {{else}}
+            <svg height="{{:~iti.height }}" width="{{: ~iti.width }}">
+                {{for slopes }}<polygon points="{{:points}}" style="fill:{{:color}}" />{{/for}}
+            </svg>
+        {{/if}}
     </li>
     {{/for}}
+
+        {{if !closed && (economy > 0) }}
+    <li class="list-group-item mt-4 velotaf-info">
+        <button type="button "class="btn btn-sm btn-light float-right close-estimates"><i class="bi-x"></i></button>
+        <p><i class="bi-lightbulb"></i> Economies pour <abbr title="220 jours ouvrés">1 an</abbr> de vélotaf :</p>
+        <span title="économies financières" ><i class="bi-piggy-bank"></i> <b>{{:economy }} €</b></span>
+        <span title="économies carbonne" ><i class="bi-tree"></i> <b> {{:carbon }} Kg CO2<br/></b></span>
+    </li>
+    {{/if }}
+
+    </ul>
 </script>
 
 {%  endraw %}

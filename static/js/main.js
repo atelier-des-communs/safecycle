@@ -54,7 +54,7 @@ const state = {
     sort : SortType.SAFE,
     selected : null,
     estimatesClosed : false,
-    view : VIEW_SLOPE,
+    view : VIEW_SAFETY,
 }
 
 const markers = {
@@ -67,11 +67,11 @@ const locationPickerCoords = {
     [END]:null
 }
 
-MAX_SLOPE = 20
-MIN_SLOPE= -20
-MAX_SLOPE_COLOR = [237, 95, 95]
-MIN_SLOPE_COLOR = [121, 95, 237]
-ZERO_SLOPE_COLOR = [95, 237, 135]
+MAX_SLOPE = 15
+MIN_SLOPE= -15
+MAX_SLOPE_COLOR = [0, 100, 50]
+MIN_SLOPE_COLOR = [250, 100, 50]
+ZERO_SLOPE_COLOR = [100, 100, 50]
 
 
 var map = null;
@@ -83,17 +83,23 @@ const LOW_PANE_ZINDEX = 430;
 
 L.Control.Legend = L.Control.extend({
     onAdd : function (map) {
-        let types  = types_order.map(type => ({
-            color:typeColors[type],
+        let safety_types  = types_order.map(type => ({
+            color: typeColors[type],
             name: typeNames[type]}))
-        let html = renderTemplate("#legend-template", {types});
+
+        let slope_types  = [15, 12, 6, 0, -6, -12, -15].map(slope => ({
+            color:slopeColor(slope),
+            name: "" + slope + "%"}))
+
+        let html = renderTemplate("#legend-template", {
+            safety_types,
+            slope_types
+        });
 
         let res = $(html);
 
-        $("button.toggle-legend", res).click(function(e) {
-            let hidden = $(".legend-content").hasClass("hidden");
-            $(this).text(hidden ? "-" : "+")
-            $(".legend-content").toggleClass("hidden", !hidden);
+        $(res).click(function(e) {
+            $(this).toggleClass("collapsed");
             e.stopPropagation();
         });
 
@@ -135,6 +141,23 @@ L.Control.ClearButton = L.Control.extend({
     },
 });
 
+/**function slopeColor(slope) {
+
+    if (slope > 20) {
+        return "#172987";
+    } else if (slope > 15) {
+        return "#d42424";
+    } else if (slope > 10) {
+        return "#ec7409";
+    } else if (slope > 4) {
+        return "#f7ff16"
+    } else if (slope < -15) {
+        return "#e200fa";
+    } else {
+        return "white";
+    }
+}**/
+
 function slopeColor(slope) {
     let otherColor, extreme;
     if (slope >= 0) {
@@ -151,8 +174,9 @@ function slopeColor(slope) {
     for (let i=0; i<3; i++) {
         color[i] = parseInt((otherColor[i] - ZERO_SLOPE_COLOR[i]) * (slope / extreme) + ZERO_SLOPE_COLOR[i])
     }
-    return 'rgb(' + color[0] + ',' + color[1] + ',' + color[2] + ')'
+    return 'hsl(' + color[0] + ',' + color[1] + '%,' + color[2] + '%)'
 }
+
 
 function initMap() {
 
@@ -381,6 +405,8 @@ function updateList() {
             gpx_url,
             kml_url,
             drops,
+            sort:state.sort,
+            view:state.view,
             unsafe :(unsafeDistance(iti) /1000),
             distance: (iti.length/1000).toFixed(1)}
     });
@@ -410,6 +436,45 @@ function updateList() {
         state.estimatesClosed = true;
         updateList();
     })
+
+    // Update state of sort buttons
+    $("input[name=sort]").each(function () {
+        let type = $(this).val();
+        $(this).prop("checked", type === state.sort);
+    })
+    $(".sort-button").each(function () {
+        let type = $(this).attr("data-sort");
+        $(this).toggleClass("active", type === state.sort);
+    })
+
+    // On sorting change
+    $("input[name=sort]").on('change', function() {
+        if (this.checked) {
+            state.sort = $(this).val();
+        }
+        updateList();
+        updateUrl();
+    });
+
+    // Update state of view buttons
+    $("input[name=view]").each(function () {
+        let view = $(this).val();
+        $(this).prop("checked", view === state.view);
+    })
+    $(".view-button").each(function () {
+        let view = $(this).attr("data-view");
+        $(this).toggleClass("active", view === state.view);
+    })
+
+    // On view change
+    $("input[name=view]").on('change', function() {
+        if (this.checked) {
+            state.view = $(this).val();
+        }
+        stateUpdated();
+    });
+
+
 
     highlightIti(null);
 
@@ -614,6 +679,9 @@ function stateUpdatedNoUrl() {
     } else {
         map.on("click", onMapClick);
     }
+
+    $("body").toggleClass("view-slope", state.view === VIEW_SLOPE);
+    $("body").toggleClass("view-safety", state.view === VIEW_SAFETY);
 }
 
 // Fetch itinerary and Update both map and list from
@@ -663,15 +731,6 @@ function updateItineraryFromState() {
 function updateSwitchesFromState() {
     $("#vtt-switch").prop('checked', state.vtt);
     $("#vae-switch").prop('checked', state.vae);
-
-    $("input[name=sort]").each(function () {
-        let type = $(this).val();
-        $(this).prop("checked", type === state.sort);
-    })
-      $(".sort-button").each(function () {
-        let type = $(this).attr("data-sort");
-        $(this).toggleClass("active", type === state.sort);
-    })
 }
 
 function initAll() {
@@ -690,14 +749,7 @@ function initAll() {
         updateUrl();
     });
 
-    // On sorting change
-    $("input[name=sort]").on('change', function() {
-        if (this.checked) {
-            state.sort = $(this).val();
-        }
-        updateList();
-        updateUrl();
-    });
+
 
     window.onpopstate = () => {
         urlUpdated();

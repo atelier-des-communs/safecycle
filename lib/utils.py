@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 
 import requests
 from flask import Response
@@ -256,6 +257,13 @@ def get_all_itineraries(start, end, profile_type):
         itis = list(executor.map(process_fn, combinations))
         return purge_bad_itineraries(itis)
 
+
+class NestedDefaultDict(defaultdict):
+    def __init__(self, *args, **kwargs):
+        super(NestedDefaultDict, self).__init__(NestedDefaultDict, *args, **kwargs)
+
+    def __repr__(self):
+        return repr(dict(self))
 
 
 

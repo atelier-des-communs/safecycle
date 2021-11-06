@@ -32,13 +32,7 @@ const typeColors = {
     [PATH] : "#dc9364",
     [LOW_TRAFFIC] : "#96daff"
 }
-const typeNames = {
-    [BIKE] : "protégé",
-    [MEDIUM_TRAFFIC] : "traffic moyen",
-    [DANGER] : "danger",
-    [PATH] : "chemin",
-    [LOW_TRAFFIC] : "traffic faible"
-}
+const typeNames = _.path_type
 
 VIEW_SAFETY = 'safety'
 VIEW_SLOPE = 'slope'
@@ -306,10 +300,14 @@ function computeDrops(iti) {
         negative:Math.round(negative)}
 }
 
-const PREVIEW_WIDTH = 400;
+
 const ELEVATION_PER_PIXEL = 2.5;
 
 function updateList() {
+
+
+    let placeholder = $("#list-placeholder");
+    let full_width = placeholder.width() - 100;
 
     var economy = 0;
     var carbon = 0;
@@ -345,7 +343,7 @@ function updateList() {
             let distance = iti.length *  iti.shares[key]
             if (percentage > 0) {
                 shares.push({
-                    width : (distance / max_distance * PREVIEW_WIDTH).toFixed(),
+                    width : (distance / max_distance * full_width).toFixed(),
                     percentage : Math.round(percentage),
                     distance,
                     safe: safe_types.indexOf(key),
@@ -369,11 +367,10 @@ function updateList() {
 
         for (let path of iti.paths) {
             if (path.coords.length < 1) {continue}
-            let color = slopeColor(path.slope);
             let coord1  = path.coords[0];
             let coord2 = path.coords[path.coords.length-1];
-            let x1 = distance / max_distance * PREVIEW_WIDTH;
-            let x2 = (distance + path.length) / max_distance * PREVIEW_WIDTH;
+            let x1 = distance / max_distance * full_width;
+            let x2 = (distance + path.length) / max_distance * full_width;
             distance += path.length;
             let y1 = (coord1.elevation - minElevation) / ELEVATION_PER_PIXEL;
             let y2 = (coord2.elevation - minElevation) / ELEVATION_PER_PIXEL;
@@ -398,7 +395,7 @@ function updateList() {
         return {
             id:iti.id,
             height,
-            width:PREVIEW_WIDTH,
+            width:full_width,
             time,
             shares,
             slopes,
@@ -421,7 +418,7 @@ function updateList() {
         colors:typeColors};
 
     let html = renderTemplate("#itinerary-template", data)
-    $("#list-placeholder").html(html);
+    placeholder.html(html);
 
     // Setup listeners
     $(".iti-item").on("mouseover", function () {
@@ -483,6 +480,7 @@ function updateList() {
 }
 
 function renderTemplate(templateId, data) {
+    $.views.settings.delimiters("[[", "]]");
    let tmpl = $.templates(templateId);
    return tmpl.render(data);
 }

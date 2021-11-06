@@ -2,37 +2,7 @@
 {% block content %}
 
     <div class="container about">
-        <h2>À propos</h2>
-
-        <p>
-            Ce site est un service gratuit d'itinéraire à vélo, centré sur la sécurité.
-        </p>
-
-        <p>
-            C'est une interface alternative / simplifiée à <a href="http://brouter.de/brouter-web/">Brouter.de</a>, avec des profils spécifiques évitant les axes routiers non protégés
-            et intégrant l'usage du VTT (chemins de terre).
-        </p>
-
-        <p>
-            Ce service est développé et hébergé par <a href="https://atelier-des-communs.fr">l'Atelier des communs {<i class="bi-globe"></i>}</a> / <a href="https://raphael-jolivet.name">Raphaël Jolivet</a>.<br/>
-        </p>
-
-        <p>
-            Le code est ouvert, <a href="https://github.com/atelier-des-communs/safecycle">disponible sur <i class="bi-github"></i> Github</a>, sous <a href="https://github.com/atelier-des-communs/safecycle/blob/main/LICENSE">licence libre BSD</a>.
-        </p>
-
-        <h2>Dons</h2>
-
-        <p>
-            Si vous trouvez ce service utile, vous pouvez me faire un <a href="https://www.paypal.com/paypalme/atelierdescommuns">don sur <i class="bi-paypal"></i> Paypal</a> pour soutenir mon travail.<br/>
-            Merci.
-        </p>
-
-        <h2>Contact</h2>
-
-        Vous pouvez me contacter par email à <a href="mailto:raph@atelier-des-communs.fr">raph@atelier-des-communs.fr</a>
-
-
+        {{ about_text | safe }}
     </div>
 
 {% endblock %}

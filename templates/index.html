@@ -17,26 +17,26 @@
                                 <i class="bi-geo-alt-fill no-spinner" style="color:yellowgreen"></i>
                             </div>
                         </div>
-                        <select  class="form-control location-input" id="input-start" data-end="start" placeholder="Départ (ou clic sur carte)">
+                        <select  class="form-control location-input" id="input-start" data-end="start" placeholder="{{ _.departure }}">
                         </select>
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary current-location" data-end="start" type="button">
+                            <button class="btn btn-outline-secondary current-location" data-end="start" type="button" title="{{ _.current_position }}">
                                 <img src="/static/img/current-location.svg">
                             </button>
                         </div>
                     </div>
 
                     <div class="input-group location-input-group" data-end="end">
-                        <div class="input-group-prepend" title="Votre position actuelle">
+                        <div class="input-group-prepend" >
                             <div class="input-group-text">
                                 <span class="spinner-border spinner-border-sm spinner" role="status" aria-hidden="true"></span>
                                 <i class="bi-geo-alt-fill no-spinner" style="color:red"></i>
                             </div>
                         </div>
-                        <select  class="form-control location-input" id="input-end" data-end="end" placeholder="Arrivée (ou clic sur carte)">
+                        <select  class="form-control location-input" id="input-end" data-end="end" placeholder="{{ _.arrival }}">
                         </select>
-                        <div class="input-group-append" title="Votre position actuelle">
-                            <button class="btn btn-outline-secondary current-location" data-end="end" type="button">
+                        <div class="input-group-append" >
+                            <button class="btn btn-outline-secondary current-location" data-end="end" type="button" title="{{ _.current_position }}">
                                 <img src="/static/img/current-location.svg">
                             </button>
                         </div>
@@ -44,12 +44,12 @@
 
                      <div class="custom-control custom-switch m-2" title="Route avec chemins (VTT)">
                         <input type="checkbox" class="custom-control-input" id="vtt-switch">
-                        <label class="custom-control-label" for="vtt-switch">Route avec Chemins (VTT)</label>
+                        <label class="custom-control-label" for="vtt-switch">{{ _.mountain_bike }}</label>
                     </div>
 
                     <div class="custom-control custom-switch m-2"  title="Vélo électrique">
                         <input type="checkbox" class="custom-control-input" id="vae-switch">
-                        <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i> Vélo électrique</label>
+                        <label class="custom-control-label" for="vae-switch"><i class="bi-lightning-charge"></i>{{ _.electric_bike }}</label>
                     </div>
 
         </form>
@@ -59,23 +59,23 @@
     </div>
 </div>
 
-{% raw %}
+
 <script id="legend-template" type="text/html">
     <div class="info legend">
         <span class="collapsed-visible">-</span>
         <div class="legend-content legend-safety collapsed-hidden" >
-        {{for safety_types }}
+        [[for safety_types ]]
             <div>
-                <i style="background:{{: color }}"></i>&nbsp;{{: name }}
+                <i style="background:[[:color]]"></i>&nbsp;[[:name]]
             </div>
-        {{/for }}
+        [[/for ]]
         </div>
         <div class="legend-content legend-slope collapsed-hidden" >
-        {{for slope_types }}
+        [[for slope_types ]]
             <div>
-                <i style="background:{{: color }}"></i>&nbsp;{{: name }}
+                <i style="background:[[:color]]"></i>&nbsp;[[:name]]
             </div>
-        {{/for }}
+        [[/for]]
         </div>
     </div>
 </script>
@@ -83,97 +83,99 @@
 
 <script id="itinerary-template" type="text/html">
 
-    {{if itineraries.length > 0 }}
+    [[if itineraries.length > 0 ]]
     <div class="center-container">
         <form class="form-inline mb-3">
 
-            <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons" title="Tri au plus sûr">
+            <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons" >
                 <label class="btn btn-sm btn-outline-primary sort-button" data-sort="safe">
-                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe" > plus sûr
+                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe" > {{ _.sort.safe }}
                 </label>
-                <label class="btn btn-sm btn-outline-primary sort-button" data-sort="fast"  title="Tri au plus rapide">
-                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast" > plus rapide
+                <label class="btn btn-sm btn-outline-primary sort-button" data-sort="fast" >
+                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast" > {{ _.sort.fast }}
                 </label>
             </div>
 
             <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons">
-                <label class="btn btn-sm btn-outline-primary view-button" data-view="safety" title="Voir les types de route">
+                <label class="btn btn-sm btn-outline-primary view-button" data-view="safety" title="{{ _.view.tip.safety }}">
                     <input type="radio" name="view" id="sort-safe" autocomplete="off" value="safety" >
                     <i class="bi-exclamation-diamond-fill" ></i>
-                    &nbsp; sureté
+                    &nbsp; {{ _.view.safety }}
                 </label>
-                <label class="btn btn-sm btn-outline-primary view-button" data-view="slope" title="Voir le dénivelé">
+                <label class="btn btn-sm btn-outline-primary view-button" data-view="slope" title="{{ _.view.tip.slope }}">
                     <input type="radio" name="view" id="sort-fast" autocomplete="off" value="slope" >
                     <i class="bi-graph-up" ></i>
-                    &nbsp; pentes
+                    &nbsp; {{ _.view.slope }}
                 </label>
             </div>
 
         </form>
     </div>
-    {{/if}}
+    [[/if]]
 
     <ul class="list-group mr-2" id="list-placeholder">
 
 
 
 
-    {{for itineraries itemVar="~iti" }}
-    <li class="list-group-item iti-item mb-3" data-iti-id="{{:id }}">
+    [[for itineraries itemVar="~iti" ]]
+    <li class="list-group-item iti-item mb-3" data-iti-id="[[:id ]]">
         <div class="dropleft float-right">
             <button class="btn btn-light" type="button"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="bi-share-fill"></i>
             </button>
             <div class="dropdown-menu">
-                <a class="dropdown-item" type="button" href="{{:gpx_url }}"><i class="bi-download"></i> GPX</a>
-                <a class="dropdown-item" type="button" href="{{:kml_url }}"><i class="bi-download"></i> KML (Google Maps)</a>
+                <a class="dropdown-item" type="button" href="[[:gpx_url ]]"><i class="bi-download"></i> GPX</a>
+                <a class="dropdown-item" type="button" href="[[:kml_url ]]"><i class="bi-download"></i> KML (Google Maps)</a>
             </div>
         </div>
         <h5>
 
 
-            <span title="Distance"><i class="bi-signpost" ></i> {{:distance }} km</span>
-            <span title="Temps" class="ml-2" ><i class="bi-stopwatch" ></i> {{:time}}</span>
-            {{if unsafe > 0 }}
-                <span title="Axes primaires et secondaires non protégés" class="ml-2" >
-                    <i class="bi-exclamation-diamond-fill warning"></i> {{:unsafe.toFixed(2) }} km
+            <span title="{{ _.distance }}"><i class="bi-signpost" ></i> [[:distance ]] km</span>
+            <span title="Temps" class="ml-2" ><i class="bi-stopwatch" ></i> [[:time]]</span>
+            [[if unsafe > 0 ]]
+                <span title="{{ _.unsafe }}" class="ml-2" >
+                    <i class="bi-exclamation-diamond-fill warning"></i> [[:unsafe.toFixed(2) ]] km
                 </span>
-            {{/if}}
-            <span title="Dénivelé cumulé : {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }} / {{if drops.negative > 0 }} -{{: drops.negative }}m {{/if }}" class="ml-2" ><i class="bi-graph-up" ></i>
-                {{if drops.positive > 0 }} +{{: drops.positive }}m {{/if }}
+            [[/if]]
+            <span title="{{ _.slopes }} : [[if drops.positive > 0 ]] +[[: drops.positive ]]m [[/if ]] / [[if drops.negative > 0 ]] -[[: drops.negative ]]m [[/if ]]" class="ml-2" ><i class="bi-graph-up" ></i>
+                [[if drops.positive > 0 ]] +[[: drops.positive ]]m [[/if ]]
             </span>
         </h5>
-        {{if view == "safety" }}
-            {{for shares }}<span class="share-type" style="background-color:{{: color }}; width:{{: width }}px; display:inline-block" title="{{:label }} : {{: (distance/1000).toFixed(1) }} km">&nbsp;</span>{{/for }}
-        {{else}}
-            <div title="Min: {{:~iti.minElevation }}m, Max: {{:~iti.maxElevation }}m">
-                <svg height="{{:~iti.height }}" width="{{: ~iti.width }}" >
-                    {{for slopes }}<polygon points="{{:points}}" style="fill:{{:color}}" />{{/for}}
+        [[if view == "safety" ]]
+            [[for shares ]]<span class="share-type" style="background-color:[[: color ]]; width:[[: width ]]px; display:inline-block" title="[[:label ]] : [[: (distance/1000).toFixed(1) ]] km">&nbsp;</span>[[/for ]]
+        [[else]]
+            <div title="Min: [[:~iti.minElevation ]]m, Max: [[:~iti.maxElevation ]]m">
+                <svg height="[[:~iti.height ]]" width="[[: ~iti.width ]]" >
+                    [[for slopes ]]<polygon points="[[:points]]" style="fill:[[:color]]" />[[/for]]
                 </svg>
             </div>
-        {{/if}}
+        [[/if]]
     </li>
-    {{/for}}
+    [[/for]]
 
-        {{if !closed && (economy > 0) }}
+        [[if !closed && (economy > 0) ]]
     <li class="list-group-item mt-4 velotaf-info">
         <button type="button "class="btn btn-sm btn-light float-right close-estimates"><i class="bi-x"></i></button>
-        <p><i class="bi-lightbulb"></i> Economies pour <abbr title="220 jours ouvrés">1 an</abbr> de vélotaf :</p>
-        <span title="économies financières" ><i class="bi-piggy-bank"></i> <b>{{:economy }} €</b></span>
-        <span title="économies carbonne" ><i class="bi-tree"></i> <b> {{:carbon }} Kg CO2<br/></b></span>
+        <p><i class="bi-lightbulb"></i> {{ _.savings }} <abbr title="220 {{ _.business_days }}">1 {{ _.year }}</abbr> {{ _.savings_end }}:</p>
+        <span title="{{ _.financial_savings }}" ><i class="bi-piggy-bank"></i> <b>[[:economy ]] €</b></span>
+        <span title="{{ _.carbon_savings }}" ><i class="bi-tree"></i> <b> [[:carbon ]] Kg CO2<br/></b></span>
     </li>
-    {{/if }}
+    [[/if ]]
 
     </ul>
 </script>
-
-{%  endraw %}
 
     <script src="{{ url_for("static", filename="js/jquery-3.6.0.min.js" )}}" ></script>
     <script src="{{ url_for("static", filename="js/popper.min.js" )}}" ></script>
     <script src="{{ url_for("static", filename="js/jsrender.min.js" )}}" ></script>
     <script src="{{ url_for("static", filename="bootstrap/js/bootstrap.js" )}}" ></script>
     <script src="{{ url_for("static", filename="js/bootstrap-autocomplete.min.js" )}}" ></script>
+    
+    <script>
+        const _ = {{ _ | tojson }}
+    </script>
 
     <script src="{{ url_for('static', filename='js/main.js') }}" ></script>
 

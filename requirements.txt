@@ -16,6 +16,7 @@ ipython-genutils==0.2.0
 itsdangerous==2.0.1
 jedi==0.18.0
 Jinja2==3.0.2
+Markdown==3.3.4
 MarkupSafe==2.0.1
 parso==0.8.2
 pexpect==4.8.0

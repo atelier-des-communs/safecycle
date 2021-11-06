@@ -29,6 +29,7 @@ class Config:
     # In meters
     SIGNIFICANT_SAFE_DIFF = int(env("RELEVANT_SAFE_DIFF", 0))
 
+    LANGUAGES= env("LANGUAGES", "fr,en").split(",")
 
     FLASK_ENV = env("FLASK_ENV")
 

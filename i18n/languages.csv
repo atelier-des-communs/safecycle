@@ -1,0 +1,34 @@
+key;fr;en
+subtitle;Itinéraire pour vélo, centré sur la sécurité;Bicycle route with a focus on safety
+about;À propos;About
+path_type.path;chemin;dirt track
+path_type.bike;protégé;distance
+path_type.low_traffic;traffic faible;low traffic
+path_type.medium_traffic;traffic moyen;medium traffic
+path_type.danger;danger;danger
+departure;Départ (ou clic sur carte);Departure (or click on map)
+arrival;Arrivée;Arrival (or click on map)
+developped_by;Développé par;Developped by
+powered_by;Propulsé par;Powered by
+source_code;Code source;Source code
+mountain_bike;Route avec chemin (VTT);Route with tracks (moutain bike)
+electric_bike;Vélo électrique;Electric bike
+sort.safe;Plus sûr;Safer
+sort.fast;Plus rapide;Faster
+view.safety;Sureté;Safety
+view.slope;Dénivelé;Slopes
+reset_route;Supprimer l'itinéraire;Reset the route
+current_position;Centrer sur votre position actuelle;Center on your current location
+distance;Distance;Distance
+time;Temps;Time
+unsafe;Routes primaires ou secondaires non protégées;Unprotected primary or secondary roads
+slopes;Dénivelé cumulé;Cumulative drop
+savings;Économies pour  ;Savings for
+financial_savings;Économies financières;Financial savings
+carbon_savings;Économies carbone ;Carbon savings
+business_days;jours ouvrés;business days
+free_and_open_source;gratuit et open source;free and open source
+view.tip.safety;Voir les types de route;See the type of tracks
+view.tip.slope;Voir le dénivelé;See the difference in altitude
+savings_end;de vélotaf, en remplacement de la voiture.;of bicycle comute
+year;an;

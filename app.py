@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 from flask import Flask, render_template, Response, request
 import json
-
+import markdown
 from lib.cache import cache
 from lib.config import Config
+from lib.i18n import messages
 from lib.utils import *
 
 from flask_compress import Compress
@@ -24,7 +25,11 @@ def index():
 
 @app.route("/about")
 def about():
-    return render_template("about.html")
+
+    with open("templates/about_fr.md", "r") as f :
+        about_text = markdown.markdown(f.read())
+
+    return render_template("about.html", about_text=about_text)
 
 @app.route("/api/itineraries")
 def get_itineraries():
@@ -80,6 +85,10 @@ def gpx():
 def kml():
     return export("route.kml", "application/vnd.google-earth.kml+xml")
 
+
+@app.context_processor
+def global_jinja_context():
+    return dict(_=messages())
 
 if __name__ == '__main__':
     app.run()

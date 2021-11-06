@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="fr">
 <head>
-    <title>SafeCycle - Itinéraire pour vélo, centré sur la sécurité, gratuit & open source</title>
+    <title>SafeCycle - {{ _.subtitle }}, {{ _.free_and_open_source }}</title>
 
-    <meta name="description" content="Itinéraire pour vélo, centré sur la sécurité, gratuit & open source" />
+    <meta name="description" content="{{ _.subtitle }}, {{ _.free_and_open_source }}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta property="og:title" content="SafeCycle" />
-    <meta property="og:description" content="Itinéraire pour vélo, centré sur la sécurité, gratuit & open source" />
+    <meta property="og:description" content="{{ _.subtitle }}, {{ _.free_and_open_source }}" />
     <meta property="og:image" content="{{ url_for("static", filename="img/cover.jpg", _external=True, _scheme='https') }}" />
 
     <link rel="stylesheet" href="{{ url_for("static", filename="leaflet/leaflet.css")}}" />
@@ -28,8 +28,8 @@
                 {<i class="bi-bicycle"></i>}
             </span>
         </h1>
-        <h5 class="subtitle">Itinéraire pour vélo, centré sur la sécurité</h5>
-        <a href="{{ url_for("about") }}">À propos</a>
+        <h5 class="subtitle">{{ _.subtitle }}</h5>
+        <a href="{{ url_for("about") }}">{{ _.about }}</a>
     </div>
 
 {% block content %}
@@ -37,10 +37,10 @@
 
 <div id="footer">
 
-    Développé par <a href="https://atelier-des-communs.fr">l'Atelier des communs {<i class="bi-globe"></i>}</a> / <a href="https://raphael-jolivet.name">Raphaël Jolivet</a><br/>
-    Propulsé par <a href="http://brouter.de/">BRouter.de</a><br/>
-    <a href="https://github.com/atelier-des-communs/safecycle"><i class="bi-github"></i> code source</a><br/>
-    <a href="{{ url_for("about") }}">À propos</a>
+    {{ _.developped_by }} <a href="https://atelier-des-communs.fr">l'Atelier des communs {<i class="bi-globe"></i>}</a> / <a href="https://raphael-jolivet.name">Raphaël Jolivet</a><br/>
+    {{ _.powered_by }} <a href="http://brouter.de/">BRouter.de</a><br/>
+    <a href="https://github.com/atelier-des-communs/safecycle"><i class="bi-github"></i> {{ _.source_code }}</a><br/>
+    <a href="{{ url_for("about") }}">{{ _.about }}</a>
 
 </div>
 

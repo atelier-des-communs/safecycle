@@ -185,11 +185,10 @@ function initMap() {
     let tileLayer = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
                     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
                     minZoom: 0,
-                    maxZoom: 20,
-                });
+                    maxZoom: 20});
 
     tileLayer.
-        setOpacity(0.7).
+        setOpacity(0.5).
         addTo(map);
 
     map.attributionControl.setPrefix(

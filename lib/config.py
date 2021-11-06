@@ -35,3 +35,5 @@ class Config:
 
     DEFAULT_PROFILES = load_js("res/default_profiles.json")
 
+    SECRET_KEY = env("SECRET_KEY")
+

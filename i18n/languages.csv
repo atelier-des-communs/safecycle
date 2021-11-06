@@ -2,7 +2,7 @@ key;fr;en
 subtitle;Itinéraire pour vélo, centré sur la sécurité;Bicycle route with a focus on safety
 about;À propos;About
 path_type.path;chemin;dirt track
-path_type.bike;protégé;distance
+path_type.bike;protégé;protected
 path_type.low_traffic;traffic faible;low traffic
 path_type.medium_traffic;traffic moyen;medium traffic
 path_type.danger;danger;danger
@@ -31,4 +31,4 @@ free_and_open_source;gratuit et open source;free and open source
 view.tip.safety;Voir les types de route;See the type of tracks
 view.tip.slope;Voir le dénivelé;See the difference in altitude
 savings_end;de vélotaf, en remplacement de la voiture.;of bicycle comute
-year;an;
+year;an;year

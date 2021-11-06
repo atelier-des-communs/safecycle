@@ -133,7 +133,7 @@
 
 
             <span title="{{ _.distance }}"><i class="bi-signpost" ></i> [[:distance ]] km</span>
-            <span title="Temps" class="ml-2" ><i class="bi-stopwatch" ></i> [[:time]]</span>
+            <span title="{{ _.time }}" class="ml-2" ><i class="bi-stopwatch" ></i> [[:time]]</span>
             [[if unsafe > 0 ]]
                 <span title="{{ _.unsafe }}" class="ml-2" >
                     <i class="bi-exclamation-diamond-fill warning"></i> [[:unsafe.toFixed(2) ]] km
@@ -172,7 +172,7 @@
     <script src="{{ url_for("static", filename="js/jsrender.min.js" )}}" ></script>
     <script src="{{ url_for("static", filename="bootstrap/js/bootstrap.js" )}}" ></script>
     <script src="{{ url_for("static", filename="js/bootstrap-autocomplete.min.js" )}}" ></script>
-    
+
     <script>
         const _ = {{ _ | tojson }}
     </script>

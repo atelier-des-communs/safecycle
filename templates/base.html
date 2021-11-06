@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="{{ lang }}">
 <head>
     <title>SafeCycle - {{ _.subtitle }}, {{ _.free_and_open_source }}</title>
 
@@ -22,6 +22,20 @@
 
 <body>
     <div class="p-3 text-center header">
+
+        <div class="btn-group float-right">
+            <button type="button" class="btn btn-light dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <img src="/static/img/flags/{{ lang }}.svg" class="flag" >
+            </button>
+          <div class="dropdown-menu">
+              {%  for lang2 in config.LANGUAGES %}
+                  {% if lang2 != lang %}
+                    <a class="dropdown-item" href="{{ url_for("set_lang_route", lang=lang2) }}"> <img src="/static/img/flags/{{ lang2 }}.svg" class="flag" ></a>
+                  {% endif %}
+              {%  endfor %}
+          </div>
+        </div>
+
         <h1>
             <a class="title" href="/" >SafeCycle</a>
             <span class="logo">

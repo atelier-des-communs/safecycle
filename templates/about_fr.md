@@ -10,10 +10,10 @@ Le code est ouvert, [disponible sur <i class="bi-github"></i> Github](<https://g
 
 ## Dons
 
-Si vous trouvez ce service utile, vous pouvez me faire un [don sur <i class="bi-paypal"></i> Paypal](<https://www.paypal.com/paypalme/atelierdescommuns>) pour soutenir mon travail.<br>
+Si vous trouvez ce service utile, vous pouvez me faire un [don sur <i class="bi-paypal"></i> Paypal](<https://www.paypal.com/paypalme/atelierdescommuns>) pour soutenir mon travail.
 
- Merci.
+Merci.
 
 ## Contact
 
- Vous pouvez me contacter par email à [raph@atelier-des-communs.fr](<mailto:raph@atelier-des-communs.fr>)
+Vous pouvez me contacter par email à [raph@atelier-des-communs.fr](<mailto:raph@atelier-des-communs.fr>)

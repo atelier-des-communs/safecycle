@@ -104,9 +104,10 @@ L.Control.Legend = L.Control.extend({
 L.Control.CurrentLocationButton = L.Control.extend({
     onAdd : function (map) {
 
-        let res = $("<button class='btn btn-light btn-sm current-location' type='button' title='Centrer sur votre position actuelle'>" +
+        let res = $("<button class='btn btn-light btn-sm current-location' type='button'>" +
             "<img src='/static/img/current-location.svg'/>" +
             "</button>");
+        res.attr("title", _.current_position)
 
         res.click(function(e) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -122,9 +123,10 @@ L.Control.CurrentLocationButton = L.Control.extend({
 L.Control.ClearButton = L.Control.extend({
     onAdd : function (map) {
 
-        let res = $('<button class="btn btn-light btn-sm reset" type="button" title="Supprimer l\'itinéraire">' +
+        let res = $('<button class="btn btn-light btn-sm reset" type="button">' +
             "<i class='bi bi-trash'" +
             "</button>");
+        res.attr("title", _.reset_route)
 
         res.click(function(e) {
            reset();
@@ -179,9 +181,21 @@ function initMap() {
         // dragging: !L.Browser.mobile
     }).setView(CENTER, INIT_ZOOM);
 
-    const tileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).setOpacity(0.7).addTo(map);
+
+    let tileLayer = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+                    minZoom: 0,
+                    maxZoom: 20,
+                });
+
+    tileLayer.
+        setOpacity(0.7).
+        addTo(map);
+
+    map.attributionControl.setPrefix(
+        '<a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> | ' +
+        '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> ');
+
 
 
     for (let profile of ["route", "vtt"]) {

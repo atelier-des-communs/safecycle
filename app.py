@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-from flask import Flask, render_template, Response, request
+from flask import Flask, render_template, Response, request, redirect
 import json
 import markdown
 from lib.cache import cache
 from lib.config import Config
-from lib.i18n import messages
+from lib.i18n import messages, set_lang, get_lang
 from lib.utils import *
 
 from flask_compress import Compress
@@ -26,7 +26,7 @@ def index():
 @app.route("/about")
 def about():
 
-    with open("templates/about_fr.md", "r") as f :
+    with open("templates/about_%s.md" % get_lang(), "r") as f :
         about_text = markdown.markdown(f.read())
 
     return render_template("about.html", about_text=about_text)
@@ -86,9 +86,17 @@ def kml():
     return export("route.kml", "application/vnd.google-earth.kml+xml")
 
 
+@app.route("/lang/<lang>")
+def set_lang_route(lang):
+    set_lang(lang)
+    return redirect("/")
+
+
 @app.context_processor
 def global_jinja_context():
-    return dict(_=messages())
+    return dict(
+        _=messages(),
+        lang=get_lang())
 
 if __name__ == '__main__':
     app.run()

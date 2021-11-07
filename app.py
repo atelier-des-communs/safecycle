@@ -37,9 +37,10 @@ def get_itineraries():
     start = list(map(lambda s: float(s), request.args["start"].split(",")))
     end = list(map(lambda s: float(s), request.args["end"].split(",")))
     prof = request.args["profile"]
+    elec = str2bool(request.args.get("elec", "false"))
 
     try :
-        itis = get_all_itineraries(start, end, prof)
+        itis = get_all_itineraries(start, end, prof, electric=elec)
     except HttpError as e:
         if e.status == 400:
             return "No itinerary found", 400
@@ -96,6 +97,10 @@ def set_lang_route(lang):
 def global_jinja_context():
     return dict(
         _=messages(),
+        js_conf=dict(
+            center=Config.CENTER,
+            init_zoom=Config.INIT_ZOOM,
+            country=Config.COUNTRY),
         lang=get_lang())
 
 if __name__ == '__main__':

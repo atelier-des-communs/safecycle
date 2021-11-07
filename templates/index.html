@@ -180,6 +180,7 @@
 
     <script>
         const _ = {{ _ | tojson }}
+        const CONFIG = {{ js_conf | tojson }}
     </script>
 
     <script src="{{ url_for('static', filename='js/main.js') }}" ></script>

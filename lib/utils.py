@@ -27,16 +27,16 @@ def debug(*args, **kwargs):
 def error(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def profile_fullname(profile_name) :
+def profile_fullname(profile_name, **params) :
     if profile_name in Config.DEFAULT_PROFILES:
-        profile = render_profile(profile_name)
+        profile = render_profile(profile_name, **params)
         return "custom_" + profile_name + "_" + md5_hash(profile)
     return profile_name
 
-def post_profile(profile_name) :
+def post_profile(profile_name, **params) :
 
-    profile = render_profile(profile_name)
-    url = Config.BROUTER_ROOT + "/profile/" + profile_fullname(profile_name)
+    profile = render_profile(profile_name, **params)
+    url = Config.BROUTER_ROOT + "/profile/" + profile_fullname(profile_name, **params)
     res = requests.post(url, profile)
 
     if res.status_code != 200:
@@ -50,20 +50,18 @@ def md5_hash(val) :
 
 
 @cache.memoize()
-def get_route(from_latlon, to_latlon, profile=None, alternative=0):
+def get_route(from_latlon, to_latlon, profile, fullname, alternative=0):
 
     f_lat, f_lon = from_latlon
     t_lat, t_lon = to_latlon
 
     params = "format=geojson" + \
-        "&profile=%s" % profile_fullname(profile) + \
+        "&profile=%s" % fullname + \
         "&lonlats=%f,%f|%f,%f" % (f_lon, f_lat, t_lon, t_lat)
 
     params += "&alternativeidx=%d" % alternative
 
     url = Config.BROUTER_ROOT + "?" + params
-
-
 
     res = requests.get(url)
 
@@ -77,15 +75,18 @@ def get_route(from_latlon, to_latlon, profile=None, alternative=0):
     else:
         raise HttpError(url, res.status_code, res.text)
 
-def get_route_safe(from_latlon, to_latlon, profile=None, alternative=0) :
+
+def get_route_safe(from_latlon, to_latlon, profile, alternative=0, **params):
+
+    fullname = profile_fullname(profile, **params)
 
     try:
-        return get_route(from_latlon, to_latlon, profile, alternative)
+        return get_route(from_latlon, to_latlon, profile, fullname, alternative)
     except HttpError as ex:
         if ex.status == 500 and profile in Config.DEFAULT_PROFILES:
             # Missing profile => upload it and try again
-            post_profile(profile)
-            return get_route(from_latlon, to_latlon, profile, alternative)
+            post_profile(profile, **params)
+            return get_route(from_latlon, to_latlon, profile, fullname, alternative)
 
         # Other error
         raise ex
@@ -220,13 +221,11 @@ def valStr(val) :
     return str(val)
 
 @cache.memoize()
-def render_profile(profile_name, **overrides) :
+def render_profile(profile_name, **params_overrides) :
     """Render profile file, replacing args with values"""
     params = {
         **Config.DEFAULT_PROFILES[profile_name],
-        **overrides}
-
-    debug("render_profile triggered for : %s" % profile_name, **params)
+        **params_overrides}
 
     res = ""
     with open("res/profile.txt", "r") as f:
@@ -236,12 +235,15 @@ def render_profile(profile_name, **overrides) :
                 vname, value, comment, pname = match.groups()
                 if pname in params :
                     val = params[pname]
-                    res += "assign %s = %s %s" % (vname, valStr(val), comment)
+                    res += "assign %s = %s %s\n" % (vname, valStr(val), comment)
                     continue
             res += line
+
+    debug("render_profile triggered for : %s" % profile_name, **params)
+    #debug("\nProfile:\n", res)
     return res
 
-def get_all_itineraries(start, end, profile_type):
+def get_all_itineraries(start, end, profile_type, **params):
 
     profiles = ["route"] if profile_type == "route" else ["route", "vtt"]
     alternatives = range(1, 4)
@@ -250,7 +252,7 @@ def get_all_itineraries(start, end, profile_type):
 
     def process_fn(args):
         prof, alt = args
-        return get_route_safe(start, end, prof, alt)
+        return get_route_safe(start, end, prof, alt, **params)
 
     # Execute in parallel
     with ThreadPoolExecutor(max_workers=4) as executor:
@@ -266,7 +268,10 @@ class NestedDefaultDict(defaultdict):
         return repr(dict(self))
 
 
-
+def str2bool(val) :
+    if val is None :
+        return False
+    return val.lower() in ["1", "true", "yes"]
 
 
 

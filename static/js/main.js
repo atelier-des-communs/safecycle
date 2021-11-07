@@ -1,10 +1,8 @@
 
 
-const CENTER = [43.623454433187, 7.0469377950208605]
-const INIT_ZOOM = 14
+
 const START="start";
 const END="end";
-const VAE_SPEEDUP = 0.8;
 
 const BIKE = "bike"
 const MEDIUM_TRAFFIC = "medium_traffic"
@@ -185,7 +183,7 @@ function initMap() {
     let map = L.map('map',
     {
         // dragging: !L.Browser.mobile
-    }).setView(CENTER, INIT_ZOOM);
+    }).setView(CONFIG.center, CONFIG.init_zoom);
 
 
     let tileLayer = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
@@ -345,10 +343,6 @@ function updateList() {
     const templateData = sortedIti.map(function (iti) {
 
         var mins = Math.floor(iti.time / 60)
-
-        if (state.vae) {
-            mins = mins * VAE_SPEEDUP;
-        }
 
         let h = Math.floor(mins / 60);
         let m = Math.round(mins % 60);
@@ -708,7 +702,8 @@ function updateItineraryFromState() {
     let url = "/api/itineraries?" + encodeParams ({
         start : start.lat + "," + start.lon,
         end: end.lat + "," + end.lon,
-        profile : (state.vtt ? "vtt" : "route")
+        profile : (state.vtt ? "vtt" : "route"),
+        elec : (state.vae)
     });
 
     $("body").addClass("loading");
@@ -752,8 +747,7 @@ function initAll() {
 
     $("#vae-switch").on('change', function() {
         state.vae = this.checked;
-        updateList();
-        updateUrl();
+        stateUpdated();
     });
 
 
@@ -809,8 +803,7 @@ function nominatim(q, callback) {
     let params={
         q,
         format:"jsonv2",
-        countrycodes:"fr",
-        "accept-language":"",
+        countrycodes: CONFIG.country,
         addressdetails:1,
         dedupe:1,
         viewbox: bbox}

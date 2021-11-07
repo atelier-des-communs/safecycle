@@ -15,6 +15,7 @@ def load_js(path) :
 
 
 class Config:
+
     BROUTER_ROOT="http://brouter.de/brouter"
 
     CACHE_TYPE="SimpleCache"  # Flask-Caching related configs
@@ -29,11 +30,22 @@ class Config:
     # In meters
     SIGNIFICANT_SAFE_DIFF = int(env("RELEVANT_SAFE_DIFF", 0))
 
+
     LANGUAGES= env("LANGUAGES", "fr,en").split(",")
 
     FLASK_ENV = env("FLASK_ENV")
 
     DEFAULT_PROFILES = load_js("res/default_profiles.json")
 
+    # Secret key for session : anything
     SECRET_KEY = env("SECRET_KEY")
+
+    # Initial center : lat,lon
+    CENTER = list(map(lambda x : float(x), env("CENTER").split(",")))
+
+    # Inititial zoom
+    INIT_ZOOM = int(env("INIT_ZOOM", 14))
+
+    # Country to search for adresses
+    COUNTRY=env("COUNTRY")
 

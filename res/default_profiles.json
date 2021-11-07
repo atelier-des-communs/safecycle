@@ -1,6 +1,10 @@
 {
-  "route" : {},
+  "route" : {
+      "mountainBike" : false,
+       "electric" : false
+  },
   "vtt" : {
-      "mountainBike" : true
+      "mountainBike" : true,
+      "electric" : false
   }
 }

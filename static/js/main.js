@@ -478,6 +478,17 @@ function renderTemplate(templateId, data) {
    return tmpl.render(data);
 }
 
+
+function scrollIntoViewIfNeeded(target) {
+    if (target.getBoundingClientRect().bottom > window.innerHeight) {
+        target.scrollIntoView(false);
+    }
+
+    if (target.getBoundingClientRect().top < 0) {
+        target.scrollIntoView();
+    }
+}
+
 function selectItinerary(id) {
     if (state.selected === id) {
         state.selected = null
@@ -485,6 +496,7 @@ function selectItinerary(id) {
         state.selected = id;
     }
     highlightIti(id);
+    scrollIntoViewIfNeeded($("[data-iti-id=" + id + "]").get(0));
     updateUrl();
 }
 

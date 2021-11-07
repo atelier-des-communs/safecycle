@@ -23,7 +23,7 @@ assign electric = false # %electric% | Set to True if using electric bike | bool
 
 assign downhillcost       = 0    # %downhillcost% | Cost for going downhill | number
 assign downhillcutoff     = 0.5   # %downhillcutoff% | Gradients below this value in percents are not counted. | number
-assign uphillcost         = 20     # %uphillcost% | Cost for going uphill | number
+assign uphillcost         = 0     # %uphillcost% | Cost for going uphill | number
 assign uphillcutoff       = 0.5  # %uphillcutoff% | Gradients below this value in percents are not counted.  | number
 assign downhillcost       = if electric then 0 else downhillcost
 assign uphillcost         = if electric then 0 else uphillcost

@@ -8,6 +8,18 @@
     #map {
         height: 450px !important;
     }
+
+    h1 {
+        font-size: 2em;
+    }
+
+    h5 {
+        font-size:1em;
+    }
+
+    .subtitle {
+        font-size: 13pt;
+    }
 }
 
 .loading {
@@ -179,14 +191,33 @@ br.responsive {
     display: none;
 }
 
-.view-slope .legend-safety {
-    display: none;
+body.view-slope .view-safety {
+    display: none !important;
 }
 
-.view-slope .legend-slope {
-    display: block;
+body.view-safety .view-slope {
+    display: none !important;
 }
+
 
 .flag {
     width :20px;
+}
+
+.lang-button {
+    position: absolute;
+    right:4px;
+    top:4px;
+}
+
+.btn-compact {
+    padding: 2px;
+}
+
+.leaflet-marker-icon {
+    cursor:grab;
+}
+
+.legend .nav-link {
+    padding: 4px;
 }

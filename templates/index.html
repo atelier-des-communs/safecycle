@@ -63,14 +63,24 @@
 <script id="legend-template" type="text/html">
     <div class="info legend">
         <span class="collapsed-visible">-</span>
-        <div class="legend-content legend-safety collapsed-hidden" >
+
+        <ul class="nav nav-tabs collapsed-hidden">
+          <li class="nav-item">
+            <a class="nav-link active view-tab" data-view="safety" href="#"><i class="bi-graph-up"></i>{{ _.view.safety }}</a>
+          </li>
+          <li class="nav-item">
+              <a class="nav-link view-tab" data-view="slope" href="#"><i class="bi-exclamation-diamond-fill"></i>{{ _.view.slope }}</a>
+          </li>
+        </ul>
+
+        <div class="legend-content view-safety collapsed-hidden" >
         [[for safety_types ]]
             <div>
                 <i style="background:[[:color]]"></i>&nbsp;[[:name]]
             </div>
         [[/for ]]
         </div>
-        <div class="legend-content legend-slope collapsed-hidden" >
+        <div class="legend-content view-slope collapsed-hidden" >
         [[for slope_types ]]
             <div>
                 <i style="background:[[:color]]"></i>&nbsp;[[:name]]
@@ -80,35 +90,32 @@
     </div>
 </script>
 
+<script id="drop-template" type="text/html">
 
-<script id="itinerary-template" type="text/html">
+</script>
+
+    <script id="itinerary-template" type="text/html">
 
     [[if itineraries.length > 0 ]]
     <div class="center-container">
-        <form class="form-inline mb-3">
-
-            <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons" >
-                <label class="btn btn-sm btn-outline-primary sort-button" data-sort="safe">
-                    <input type="radio" name="sort" id="sort-safe" autocomplete="off" value="safe" > {{ _.sort.safe }}
-                </label>
-                <label class="btn btn-sm btn-outline-primary sort-button" data-sort="fast" >
-                    <input type="radio" name="sort" id="sort-fast" autocomplete="off" value="fast" > {{ _.sort.fast }}
-                </label>
+        <form class="form-inline mb-3 ">
+            <div class="btn-group mr-2">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    [[: _.sort_label ]] :  [[: _.sort[sort] ]]
+                </button>
+                <div class="dropdown-menu">
+                    <button type="button" class="dropdown-item sort-button" data-sort="[[: sort_alt ]]">[[: _.sort[sort_alt] ]]</button>
+                </div>
             </div>
 
-            <div class="btn-group btn-group-toggle btn-sm" data-toggle="buttons">
-                <label class="btn btn-sm btn-outline-primary view-button" data-view="safety" title="{{ _.view.tip.safety }}">
-                    <input type="radio" name="view" id="sort-safe" autocomplete="off" value="safety" >
-                    <i class="bi-exclamation-diamond-fill" ></i>
-                    &nbsp; {{ _.view.safety }}
-                </label>
-                <label class="btn btn-sm btn-outline-primary view-button" data-view="slope" title="{{ _.view.tip.slope }}">
-                    <input type="radio" name="view" id="sort-fast" autocomplete="off" value="slope" >
-                    <i class="bi-graph-up" ></i>
-                    &nbsp; {{ _.view.slope }}
-                </label>
+            <div class="btn-group">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      [[: _.view_label ]] : [[: _.view[view] ]]
+                </button>
+                <div class="dropdown-menu">
+                    <button type="button" class="dropdown-item view-button" data-view="[[: view_alt ]]">[[: _.view[view_alt] ]]</button>
+                </div>
             </div>
-
         </form>
     </div>
     [[/if]]
@@ -121,7 +128,7 @@
     [[for itineraries itemVar="~iti" ]]
     <li class="list-group-item iti-item mb-3" data-iti-id="[[:id ]]">
         <div class="dropleft float-right">
-            <button class="btn btn-light" type="button"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            <button class="btn btn-light btn-compact" type="button"  data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                 <i class="bi-share-fill"></i>
             </button>
             <div class="dropdown-menu">
@@ -130,8 +137,6 @@
             </div>
         </div>
         <h5>
-
-
             <span title="{{ _.distance }}"><i class="bi-signpost" ></i> [[:distance ]] km</span>
             <span title="{{ _.time }}" class="ml-2" ><i class="bi-stopwatch" ></i> [[:time]]</span>
             [[if unsafe > 0 ]]
@@ -143,15 +148,15 @@
                 [[if drops.positive > 0 ]] +[[: drops.positive ]]m [[/if ]]
             </span>
         </h5>
-        [[if view == "safety" ]]
-            [[for shares ]]<span class="share-type" style="background-color:[[: color ]]; width:[[: width ]]px; display:inline-block" title="[[:label ]] : [[: (distance/1000).toFixed(1) ]] km">&nbsp;</span>[[/for ]]
-        [[else]]
-            <div title="Min: [[:~iti.minElevation ]]m, Max: [[:~iti.maxElevation ]]m">
+
+            [[for shares ]]<span class="share-type view-safety" style="background-color:[[: color ]]; width:[[: width ]]px; display:inline-block" title="[[:label ]] : [[: (distance/1000).toFixed(1) ]] km">&nbsp;</span>[[/for ]]
+
+            <div class='view-slope' title="Min: [[:~iti.minElevation ]]m, Max: [[:~iti.maxElevation ]]m">
                 <svg height="[[:~iti.height ]]" width="[[: ~iti.width ]]" >
                     [[for slopes ]]<polygon points="[[:points]]" style="fill:[[:color]]" />[[/for]]
                 </svg>
             </div>
-        [[/if]]
+
     </li>
     [[/for]]
 

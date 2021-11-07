@@ -92,6 +92,12 @@ L.Control.Legend = L.Control.extend({
 
         let res = $(html);
 
+        $(".view-tab", res).click(function (e) {
+            let view = $(this).attr("data-view");
+            updateView(view);
+            e.stopPropagation();
+        });
+
         $(res).click(function(e) {
             $(this).toggleClass("collapsed");
             e.stopPropagation();
@@ -340,7 +346,6 @@ function updateList() {
 
         var mins = Math.floor(iti.time / 60)
 
-
         if (state.vae) {
             mins = mins * VAE_SPEEDUP;
         }
@@ -417,8 +422,6 @@ function updateList() {
             drops,
             minElevation:minElevation.toFixed(),
             maxElevation:maxElevation.toFixed(),
-            sort:state.sort,
-            view:state.view,
             unsafe :(unsafeDistance(iti) /1000),
             distance: (iti.length/1000).toFixed(1)}
     });
@@ -428,6 +431,11 @@ function updateList() {
         itineraries:templateData,
         carbon, economy,
         max_distance,
+        sort:state.sort,
+        view:state.view,
+        view_alt : state.view === VIEW_SAFETY ? VIEW_SLOPE : VIEW_SAFETY,
+        sort_alt : state.sort === SortType.SAFE ? SortType.FAST : SortType.SAFE,
+        _:_,
         colors:typeColors};
 
     let html = renderTemplate("#itinerary-template", data)
@@ -449,41 +457,19 @@ function updateList() {
         updateList();
     })
 
-    // Update state of sort buttons
-    $("input[name=sort]").each(function () {
-        let type = $(this).val();
-        $(this).prop("checked", type === state.sort);
-    })
-    $(".sort-button").each(function () {
-        let type = $(this).attr("data-sort");
-        $(this).toggleClass("active", type === state.sort);
-    })
+
 
     // On sorting change
-    $("input[name=sort]").on('change', function() {
-        if (this.checked) {
-            state.sort = $(this).val();
-        }
+    $(".sort-button").click(function() {
+        state.sort = $(this).attr("data-sort");
         updateList();
         updateUrl();
     });
 
-    // Update state of view buttons
-    $("input[name=view]").each(function () {
-        let view = $(this).val();
-        $(this).prop("checked", view === state.view);
-    })
-    $(".view-button").each(function () {
-        let view = $(this).attr("data-view");
-        $(this).toggleClass("active", view === state.view);
-    })
 
     // On view change
-    $("input[name=view]").on('change', function() {
-        if (this.checked) {
-            state.view = $(this).val();
-        }
-        stateUpdated();
+    $(".view-button").click(function() {
+        updateView($(this).attr("data-view"));
     });
 
 
@@ -575,54 +561,52 @@ function updateMap() {
             })
         }
 
-        const className = "iti-" + iti.id
-
         // Add dark line behind
         iti.paths.forEach(function (path) {
 
             const transpLine = L.geoJSON(
                 toGeoJson(path),
-                {   pane : iti.id,
+                {
+                    pane : iti.id,
                     style: {
                         weight: 20,
-                        color: "rgba(0,0,0,0)",
-                        className}
+                        color: "rgba(0,0,0,0)"}
                 });
             addPoly(transpLine);
 
             const blackLine = L.geoJSON(
                 toGeoJson(path),
-                {   pane:iti.id,
+                {
+                    pane:iti.id,
                     style: {
                         weight: 8,
-                        color: "black",
-                        className}
+                        color: "black"}
                 });
 
             addPoly(blackLine);
         });
 
-        const styleFn = function (js) {
-
-            let color = (state.view === VIEW_SLOPE) ?
+        const styleFn = function (js, view) {
+            let color = (view === VIEW_SLOPE) ?
                 slopeColor(js.properties.slope) :
                 typeColors[js.properties.type];
 
-            return {
-                weight:4, color, className
-            };
+            return {weight:4, color, className : "view-" + view}
         }
 
-        // Add thin line with color for path type
+        // Add line both safety and slope colors, controlled by css class
         iti.paths.forEach(function (path) {
-            const poly = L.geoJSON(
-                toGeoJson(path),
+            addPoly(L.geoJSON(toGeoJson(path),
                 {
-                    style: styleFn,
-                    pane: iti.id});
+                    style: (js) => styleFn(js, VIEW_SAFETY),
+                    pane: iti.id}));
 
-            addPoly(poly);
+            addPoly(L.geoJSON(toGeoJson(path),
+                {
+                    style: (js) => styleFn(js, VIEW_SLOPE),
+                    pane: iti.id}));
         });
+
 
     }
 
@@ -693,8 +677,18 @@ function stateUpdatedNoUrl() {
         map.on("click", onMapClick);
     }
 
+
+}
+
+function updateView(view) {
+    state.view = view;
     $("body").toggleClass("view-slope", state.view === VIEW_SLOPE);
     $("body").toggleClass("view-safety", state.view === VIEW_SAFETY);
+    $(".view-tab").each(function () {
+        let tabView = $(this).attr("data-view");
+        $(this).toggleClass("active", view == tabView);
+    })
+    updateList();
 }
 
 // Fetch itinerary and Update both map and list from

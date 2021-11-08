@@ -21,7 +21,7 @@ const SortType = {
     FAST : "fast"
 }
 
-const address_parts = ["shop", "tourism", "amenity", "road", "village", "town", "city"]
+const address_parts = ["shop", "tourism", "amenity", "highway", "road", "village", "town", "city"]
 
 const typeColors = {
     [BIKE] : "#8efc95",
@@ -47,6 +47,7 @@ const state = {
     selected : null,
     estimatesClosed : false,
     view : VIEW_SAFETY,
+    debug:false,
 }
 
 const markers = {
@@ -200,7 +201,6 @@ function initMap() {
         '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> ');
 
 
-
     for (let profile of ["route", "vtt"]) {
         for (let alternative of [1, 2, 3, 4]) {
             let id = profile + "-" + alternative;
@@ -284,8 +284,6 @@ function onMapClick(e) {
     }
     updateCoord(end, latlng2latlon(e.latlng))
 }
-
-
 
 
 
@@ -550,7 +548,14 @@ function updateMap() {
 
     function drawIti(iti) {
 
-        function addPoly(poly) {
+        function addPoly(poly, path) {
+
+            if (state.debug) {
+                console.log(poly)
+                const content = Object.entries(path.tags).map(([k, v], _) => "<b>" + k + "</b> :" + v + "<br/>").join("\n");
+
+                poly.bindTooltip(content, {sticky: true})
+            }
 
             poly.addTo(map);
             geojsonLayers.push(poly)
@@ -578,7 +583,7 @@ function updateMap() {
                         weight: 20,
                         color: "rgba(0,0,0,0)"}
                 });
-            addPoly(transpLine);
+            addPoly(transpLine, path);
 
             const blackLine = L.geoJSON(
                 toGeoJson(path),
@@ -589,7 +594,7 @@ function updateMap() {
                         color: "black"}
                 });
 
-            addPoly(blackLine);
+            addPoly(blackLine, path);
         });
 
         const styleFn = function (js, view) {
@@ -605,12 +610,12 @@ function updateMap() {
             addPoly(L.geoJSON(toGeoJson(path),
                 {
                     style: (js) => styleFn(js, VIEW_SAFETY),
-                    pane: iti.id}));
+                    pane: iti.id}), path);
 
             addPoly(L.geoJSON(toGeoJson(path),
                 {
                     style: (js) => styleFn(js, VIEW_SLOPE),
-                    pane: iti.id}));
+                    pane: iti.id}), path);
         });
 
 
@@ -637,6 +642,7 @@ function urlUpdated() {
     state.vae = urlParams.get("vae") === "true";
     state.vtt = urlParams.get("profile") ? (urlParams.get("profile") === "vtt") : true;
     state.sort = urlParams.get("sort") || "safe";
+    state.debug = urlParams.get("debug") === "true";
     state.selected = window.location.hash.replace("#", "");
 
     for (let end of [START, END]) {
@@ -777,8 +783,10 @@ function updateUrl() {
         profile: (state.vtt ? "vtt" : "route"),
         vae: state.vae,
         sort : state.sort,
+        debug : state.debug ? "true" : null,
         ...encodeCoords()
     }
+
 
     let url = "?" + encodeParams(params) + ((state.selected) ? ("#" + state.selected) : "");
 
@@ -799,7 +807,11 @@ function encodeCoords() {
 
 function encodeParams(params) {
     const searchParams = new URLSearchParams();
-    Object.keys(params).forEach(key => searchParams.append(key, params[key]));
+    Object.keys(params).forEach(key => {
+        if (params[key] !== null) {
+            searchParams.append(key, params[key])
+        }
+    });
     return searchParams.toString();
 }
 
@@ -815,14 +827,20 @@ function nominatim(q, callback) {
     let params={
         q,
         format:"jsonv2",
-        countrycodes: CONFIG.country,
         addressdetails:1,
         dedupe:1,
-        viewbox: bbox}
+        viewbox: bbox};
+
+    if (CONFIG.country) {
+        params["countrycodes"] = CONFIG.country
+    }
+
     $.getJSON(base + encodeParams(params), function (data) {
         let res = data.map(function (item) {
             let addr = item.address;
-            var text = "";
+
+            console.log(addr)
+
             var parts = [];
             for(let part of address_parts) {
                 if (addr[part]) {

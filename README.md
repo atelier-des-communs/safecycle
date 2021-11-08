@@ -13,10 +13,18 @@ This service is developed by [l'Atelier des communs](<https://atelier-des-commun
 
 This website is developped in Python / [Flask](https://flask.palletsprojects.com/en/2.0.x/])
 
-1) Create a file `.env` with at least **SECRET_KEY** set :
+1) Create a file `.env` with the same folder, with at least the mandatory parameter set :
 
-    > SECRET_KEY=foo
-                                                               
+   | Key         | Value     | Default |
+   |--------------|-----------|------------|
+   | **SECRET_KEY** | "any-secret-123" (for session) | **mandatory**        |
+   | **FLASK_ENV**  | development / production  | **mandatory**       |
+   | **CENTER** | Initial center of map : lat,lon | **mandatory** |
+   | COUNTRY | 2 letter country code to restrict location search  | empty |
+   | INIT_ZOOM | Initial zoom | 14 |
+   | CACHE_DEFAULT_TIMEOUT | Timeout for cache of resquests to Brouter, in seconds | 24 * 3600 |    
+   | STATIC_CACHE_TIMOUT | Timeout for cache of resquests to Brouter, in seconds | 24 * 3600 |  
+                                                       
    See other settings in [config.py](lib/config.py)                                                     
 
 2) Install dependencies :

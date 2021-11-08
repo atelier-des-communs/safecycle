@@ -16,13 +16,15 @@ def load_js(path) :
 
 class Config:
 
+    FLASK_ENV = env("FLASK_ENV")
+
     BROUTER_ROOT="http://brouter.de/brouter"
 
     CACHE_TYPE="SimpleCache"  # Flask-Caching related configs
 
-    CACHE_DEFAULT_TIMEOUT = 24*3600
+    CACHE_DEFAULT_TIMEOUT = int(env("CACHE_DEFAULT_TIMEOUT", 24*3600))
 
-    SEND_FILE_MAX_AGE_DEFAULT = 24 * 3600
+    STATIC_CACHE_TIMOUT = int(env("STATIC_CACHE_TIMOUT", 24 * 3600))
 
     # In seconds
     SIGNIFICANT_TIME_DIFF = int(env("RELEVANT_TIME_DIFF", 30))
@@ -33,7 +35,7 @@ class Config:
 
     LANGUAGES= env("LANGUAGES", "fr,en").split(",")
 
-    FLASK_ENV = env("FLASK_ENV")
+
 
     DEFAULT_PROFILES = load_js("res/default_profiles.json")
 
@@ -47,5 +49,5 @@ class Config:
     INIT_ZOOM = int(env("INIT_ZOOM", 14))
 
     # Country to search for adresses
-    COUNTRY=env("COUNTRY")
+    COUNTRY=env("COUNTRY", "")
 

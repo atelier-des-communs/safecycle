@@ -68,10 +68,12 @@ assign is_ldcr =
      if ignore_cycleroutes then false
      else any_cycleroute
 
-assign isbike = or bicycle_road=yes or bicycle=yes or or bicycle=permissive bicycle=designated lcn=yes
+assign isprotected = or highway=cycleway or cycleway=lane|opposite|opposite_lane|track|opposite_track|share_busway or bicycle_road=yes bicycle=designated
+assign isbike = or isprotected or bicycle=permissive or bicycle=yes lcn=yes
 assign ispaved = surface=paved|asphalt|concrete|paving_stones
 assign isunpaved = not or surface= or ispaved surface=fine_gravel|cobblestone
 assign probablyGood = or ispaved and ( or isbike highway=footway ) not isunpaved
+
 
 
 #
@@ -181,6 +183,10 @@ assign costfactor
   # exclude rivers, rails etc.
   #
   if ( and highway= not route=ferry ) then 10000
+
+  # Protected are very good
+
+  else if ( isprotected ) then 0.8
 
   #
   # exclude motorways and proposed roads

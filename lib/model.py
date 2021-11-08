@@ -33,18 +33,23 @@ class Path :
         def tag(key) :
             return tag_eq(key, "yes")
 
-        isbike = tag("bicycle_road") \
-                 or tag_in("bicycle", ["yes", "permissive", "designated"]) \
-                 or tag("lcn") \
-                 or tag_eq("highway", "cycleway")
+        isprotected = tag("bicycle_road") \
+                 or tag_eq("bicycle", "designated") \
+                 or tag_eq("highway", "cycleway") \
+                 or tag_eq("cycleway", "lane") \
+                 or tag_eq("cycleway:right", "lane") \
+                 or tag_eq("cycleway:left", "lane") \
+                 or tag_eq("cycleway:both", "lane")
+
+        isbike = isprotected or tag_in("bicycle", ["yes", "permissive"])
         ispaved = tag_in("surface", ["paved", "asphalt", "concrete", "paving_stones"])
         isunpaved = not (ispaved or tag_eq("surface", "") or tag_in("surface", ["fine_gravel", "cobblestone"]))
         probablyGood = ispaved or (not isunpaved and (isbike or tag_eq("highway", "footway")))
 
-        if isbike :
+        if isprotected:
             return BIKE
 
-        if tag_in("highway", ["track", "road", "path", "footway"]) and not probablyGood :
+        if tag_in("highway", ["track", "road", "path", "footway"]) and not probablyGood:
             return PATH
 
         if tag_in("highway", ["trunk", "trunk_link", "primary", "primary_link"]) :

@@ -36,7 +36,7 @@ class Path :
         isprotected = tag("bicycle_road") \
                  or tag_eq("bicycle", "designated") \
                  or tag_eq("highway", "cycleway") \
-                 or tag_eq("cycleway", "lane") \
+                 or tag_in("cycleway", ["lane", "opposite", "opposite_lane", "track", "opposite_track", "share_busway"]) \
                  or tag_eq("cycleway:right", "lane") \
                  or tag_eq("cycleway:left", "lane") \
                  or tag_eq("cycleway:both", "lane")

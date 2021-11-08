@@ -69,11 +69,10 @@ assign is_ldcr =
      else any_cycleroute
 
 assign isprotected = or highway=cycleway or cycleway=lane|opposite|opposite_lane|track|opposite_track|share_busway or bicycle_road=yes bicycle=designated
-assign isbike = or isprotected or bicycle=permissive or bicycle=yes lcn=yes
+assign isbike = or isprotected or bicycle=permissive bicycle=yes
 assign ispaved = surface=paved|asphalt|concrete|paving_stones
 assign isunpaved = not or surface= or ispaved surface=fine_gravel|cobblestone
 assign probablyGood = or ispaved and ( or isbike highway=footway ) not isunpaved
-
 
 
 #
@@ -217,7 +216,7 @@ assign costfactor
   #
   # handle long-distance cycle-routes.
   #
-  else if ( is_ldcr ) then 1                   # always treated as perfect (=1)
+  # else if ( is_ldcr ) then 1                   # always treated as perfect (=1)
   else
   add ( if stick_to_cycleroutes then 0.5 else 0.05 )  # everything else somewhat up
 

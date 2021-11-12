@@ -7,13 +7,18 @@ from hashlib import md5
 
 from .cache import cache
 from .config import Config
-from .model import Itinerary, Path, Coord, UNSAFE
-import haversine as hs
+from .model import Itinerary, Path, Coord
+
+
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
 MAX_DISTANCE = 10
+
+EQUAL="equal"
+BETTER="better"
+WORSE="worse"
 
 def debug(*args, **kwargs):
     if Config.FLASK_ENV == "development":
@@ -43,6 +48,10 @@ def post_profile(profile_name, **params) :
         debug("Upload failed !")
         raise HttpError(url, res.status_code, res.text)
 
+    error = res.json().get("error", None)
+    if error:
+        raise Exception("Error in profile %s :\n%s" %(profile_name, error))
+
 
 
 def md5_hash(val) :
@@ -67,6 +76,9 @@ def get_route(from_latlon, to_latlon, profile, fullname, alternative=0):
 
     debug("Calling Brouter ", url, res.status_code)
     if res.status_code == 200:
+
+        #debug(json.dumps(res.json(), indent=2))
+
         res = process_message(res.json())
         res.alternative = alternative
         res.profile = profile
@@ -102,8 +114,10 @@ def process_message(js) :
     messages = list(dict((k, v) for k, v in zip(header, message)) for message in messages)
 
     time = int(props["total-time"])
+    cost = int(props["cost"])
+    length = int(props["track-length"])
 
-    iti = Itinerary(time)
+    iti = Itinerary(time, length, cost)
 
     def new_path() :
         path = Path()
@@ -114,7 +128,7 @@ def process_message(js) :
     message_it = iter(messages)
     curr_message = next(message_it)
 
-    for coords in coordinates:
+    for i_coord, coords in enumerate(coordinates):
         lon, lat, height = coords
 
         lon_str = str(int(lon * 1000000))
@@ -131,14 +145,24 @@ def process_message(js) :
                 curr_path.tags[k] = v
 
             curr_path.length = int(curr_message["Distance"])
+            for key, name in dict(CostPerKm="per_km", ElevCost="elevation", TurnCost="turn", NodeCost="node", InitialCost="initial").items() :
+                curr_path.costs[name] = float(curr_message[key])
 
             try:
                 curr_message = next(message_it)
+                curr_path = new_path()
+                curr_path.coords.append(coord)
             except StopIteration :
-                break
 
-            curr_path = new_path()
-            curr_path.coords.append(coord)
+                if i_coord < len(coordinates) - 1:
+                    error("There was still coordinates!")
+                break
+    try:
+        next(message_it)
+        debug("There was still messages")
+    except:
+        pass
+
 
     return iti
 
@@ -165,51 +189,60 @@ def js_response(obj):
 
 
 
-def unsafe_distance(iti) :
-    res = 0
-    for path in iti.paths :
-        if path.type() in UNSAFE :
-            res += path.length
+def compare(cost1, cost2, min_diff) :
+    """Compare costs"""
+    if abs(cost1-cost2) < min_diff :
+        return EQUAL
+    if cost1 > cost2 :
+        return WORSE
+    else:
+        return BETTER
 
+
+
+
+
+def check_kpis(iti : Itinerary, other_iti: Itinerary, status) :
+    """Return true if iti is equal or worse than other_iti for both KPI"""
+
+    res = compare(iti.time, other_iti.time, Config.SIGNIFICANT_TIME_DIFF) == status \
+            and compare(iti.unsafe_score(), other_iti.unsafe_score(), Config.SIGNIFICANT_SAFE_DIFF) in status
+    debug(
+        iti1=iti.id, iti2=other_iti.id,
+        iti1_time=iti.time, iti2_time=other_iti.time,
+        iti1_unsafe=iti.unsafe_score(), iti2_unsafe=other_iti.unsafe_score(),
+        status=status,
+        res=res)
     return res
 
 
 
-def not_worth(iti, other_iti) :
-    """Return false if iti is almost similar or worse then other_iti for both KPI"""
-    return iti.time > other_iti.time - Config.SIGNIFICANT_TIME_DIFF and unsafe_distance(iti) > unsafe_distance(other_iti) - Config.SIGNIFICANT_SAFE_DIFF
-
-def same_itineraries(iti1, iti2) :
-    if len(iti1.paths) != len(iti2.paths) :
-        return False
-    for path1, path2 in zip(iti1.paths, iti2.paths) :
-        dist = hs.haversine(
-            (path1.coords[0].lat, path1.coords[0].lon),
-            (path2.coords[0].lat, path2.coords[0].lon))
-        if dist > MAX_DISTANCE :
-            return False
-    return True
-
 
 def purge_bad_itineraries(itis) :
     """Remove itineraries that are neither faster or safer than others"""
-    winners = []
+    res = []
 
     for iti in itis :
         for other_iti in itis :
-            if iti != other_iti and not_worth(iti, other_iti) :
+            if iti != other_iti and check_kpis(iti, other_iti, WORSE):
                 break
         else :
-            winners.append(iti)
-    res= []
+            # iti was better than at least one other itinerary, for one KPI (time or safety) : worth keeping
+            res.append(iti)
+    debug("Purge bad itis. Before:%d. After:%d" % (len(itis), len(res)))
+    return res
 
-    # Remove duplicates
-    for winner in winners :
+
+def purge_doublons(itis) :
+    res = []
+    for iti in itis :
         for other in res :
-            if same_itineraries(winner, other):
+            if check_kpis(iti, other, EQUAL):
                 break
         else:
-            res.append(winner)
+            # No same itineraries yet
+            res.append(iti)
+    debug("Purge doublons. Before:%d. After:%d" % (len(itis), len(res)))
     return res
 
 
@@ -243,10 +276,10 @@ def render_profile(profile_name, **params_overrides) :
     #debug("\nProfile:\n", res)
     return res
 
-def get_all_itineraries(start, end, profile_type, **params):
+def get_all_itineraries(start, end, best_only=False,  **params):
 
-    profiles = ["route"] if profile_type == "route" else ["route", "vtt"]
-    alternatives = range(1, 4)
+    profiles = ["fast", "medium", "safe"]
+    alternatives = [1, 2, 3]
 
     combinations = [(prof, alt) for prof in profiles for alt in alternatives]
 
@@ -257,7 +290,13 @@ def get_all_itineraries(start, end, profile_type, **params):
     # Execute in parallel
     with ThreadPoolExecutor(max_workers=4) as executor:
         itis = list(executor.map(process_fn, combinations))
-        return purge_bad_itineraries(itis)
+
+    if best_only:
+        itis = purge_bad_itineraries(itis)
+        itis = purge_doublons(itis)
+
+    return itis
+
 
 
 class NestedDefaultDict(defaultdict):

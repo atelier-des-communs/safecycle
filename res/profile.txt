@@ -12,8 +12,6 @@ assign validForBikes = true
 assign allow_steps              = true   # %allow_steps% | Set to false to disallow steps | boolean
 assign allow_ferries            = true   # %allow_ferries% | set to false to disallow ferries | boolean
 assign ignore_cycleroutes       = false  # %ignore_cycleroutes% | Set to true for better elevation results | boolean
-assign stick_to_cycleroutes     = false  # %stick_to_cycleroutes% | Set to true to just follow cycleroutes | boolean
-assign avoid_unsafe = true # %avoid_unsafe% | Set to true to avoid standard highways | boolean
 assign considerTurnRestrictions = false  # %considerTurnRestrictions% | Set to true to take turn restrictions into account | boolean
 assign processUnusedTags        = false  # %processUnusedTags% | Set to true to output unused tags in data tab | boolean
 assign mountainBike = false # %mountainBike% | Set to True if using moutainbike : paths are allowed | boolean
@@ -35,12 +33,17 @@ assign totalMass  = 90     # %totalMass% | Mass (in kg) of the bike + biker, for
 assign maxSpeed   = 25     # %maxSpeed% | Absolute maximum speed (in km/h), for travel time computation | number
 assign S_C_x      = 0.225  # %S_C_x% | Drag coefficient times the reference area (in m^2), for travel time computation | number
 assign C_r        = 0.01   # %C_r% | Rolling resistance coefficient (dimensionless), for travel time computation | number
-assign bikerPower = if electric then 160 else 100
+assign bikerPower = if electric then 190 else 120
+
+# Safety params
+assign unprotected_penalty = 0.1 # %unprotected_penalty% | Additive penalty for all non protected roads | number
+assign unsafe_penalty = 0.5 # %unsafe_penalty% | Additive penalty for all roads >= secondary | number
 
 # Turn instructions settings
 assign turnInstructionMode          = 1     # %turnInstructionMode% | Mode for the generated turn instructions | [0=none, 1=auto-choose, 2=locus-style, 3=osmand-style, 4=comment-style, 5=gpsies-style, 6=orux-style]
 assign turnInstructionCatchingRange = 40    # %turnInstructionCatchingRange% | Within this distance (in m) several turning instructions are combined into one and the turning angles are better approximated to the general direction | number
 assign turnInstructionRoundabouts   = true  # %turnInstructionRoundabouts% | Set to "false" to avoid generating special turning instructions for roundabouts | boolean
+
 
 
 ---context:way   # following code refers to way-tags
@@ -52,24 +55,22 @@ assign classifier_ferry = 2
 #
 # pre-calculate some logical expressions
 #
+#
 
-assign any_cycleroute =
-     if      route_bicycle_icn=yes then true
-     else if route_bicycle_ncn=yes then true
-     else if route_bicycle_rcn=yes then true
-     else if route_bicycle_lcn=yes then true
-     else false
+assign isprotected =
+    or highway=cycleway
+    or bicycle_road=yes
+    or bicycle=designated
+    or cycleway=lane|opposite|opposite_lane|track|opposite_track|share_busway|shared_lane
+    or cycleway:right=lane|opposite|opposite_lane|track|opposite_track|share_busway|shared_lane
+    or cycleway:left=lane|opposite|opposite_lane|track|opposite_track|share_busway|shared_lane
+    and highway=pedestrian bicycle=yes
 
-assign nodeaccessgranted =
-     if any_cycleroute then true
-     else lcn=yes
+assign isbike =
+    or isprotected
+    or bicycle=permissive
+       bicycle=yes
 
-assign is_ldcr =
-     if ignore_cycleroutes then false
-     else any_cycleroute
-
-assign isprotected = or highway=cycleway or cycleway=lane|opposite|opposite_lane|track|opposite_track|share_busway or bicycle_road=yes bicycle=designated
-assign isbike = or isprotected or bicycle=permissive bicycle=yes
 assign ispaved = surface=paved|asphalt|concrete|paving_stones
 assign isunpaved = not or surface= or ispaved surface=fine_gravel|cobblestone
 assign probablyGood = or ispaved and ( or isbike highway=footway ) not isunpaved
@@ -81,10 +82,7 @@ assign probablyGood = or ispaved and ( or isbike highway=footway ) not isunpaved
 # (Suppressing turncost while following longdistance-cycleways
 # makes them a little bit more magnetic)
 #
-assign turncost = if is_ldcr then 0
-                  else if junction=roundabout then 0
-                  else 90
-
+assign turncost = 20
 
 #
 # for any change in initialclassifier, initialcost is added once
@@ -92,7 +90,6 @@ assign turncost = if is_ldcr then 0
 assign initialclassifier =
      if route=ferry then classifier_ferry
      else classifier_none
-
 
 #
 # calculate the initial cost
@@ -116,8 +113,7 @@ assign defaultaccess =
 # calculate logical bike access
 #
 assign bikeaccess =
-       if any_cycleroute then true
-       else if bicycle= then
+       if bicycle= then
        (
          if bicycle_road=yes then true
          else if vehicle= then ( if highway=footway then false else defaultaccess )
@@ -160,7 +156,7 @@ assign onewaypenalty =
        if ( badoneway ) then
        (
          if ( cycleway=opposite|opposite_lane|opposite_track ) then 0
-         else if ( oneway:bicycle=no                         ) then 0
+         else if ( oneway:bicycle=no ) then 0
          else if ( highway=primary|primary_link              ) then 50
          else if ( highway=secondary|secondary_link          ) then 30
          else if ( highway=tertiary|tertiary_link            ) then 20
@@ -183,15 +179,11 @@ assign costfactor
   #
   if ( and highway= not route=ferry ) then 10000
 
-  # Protected are very good
-
-  else if ( isprotected ) then 0.8
-
   #
   # exclude motorways and proposed roads
   #
-  else if ( highway=motorway|motorway_link ) then   10000
-  else if ( highway=proposed|abandoned     ) then   10000
+  else if ( highway=motorway|motorway_link ) then 10000
+  else if ( highway=proposed|abandoned     ) then 10000
 
   #
   # all other exclusions below (access, steps, ferries,..)
@@ -213,21 +205,20 @@ assign costfactor
   if ( highway=steps ) then ( if allow_steps then 40 else 10000 )
   else if ( route=ferry   ) then ( if allow_ferries then 5.67 else 10000 )
 
-  #
-  # handle long-distance cycle-routes.
-  #
-  # else if ( is_ldcr ) then 1                   # always treated as perfect (=1)
-  else
-  add ( if stick_to_cycleroutes then 0.5 else 0.05 )  # everything else somewhat up
 
   #
-  # some other highway types
+  # If searching for safety, only protected is 1, else we add a penalty
   #
-  if      ( highway=pedestrian                ) then 3
+
+  else if ( isprotected ) then 1
+  else
+  add unprotected_penalty
+
+  if ( highway=pedestrian                ) then 3
   else if ( highway=bridleway                 ) then 5
   else if ( highway=cycleway                  ) then 1
-  else if ( isresidentialorliving             ) then ( if isunpaved then 1.5 else 1.1 )
-  else if ( highway=service                   ) then ( if isunpaved then 1.6 else 1.3 )
+  else if ( isresidentialorliving             ) then ( if isunpaved then 1.5 else 1 )
+  else if ( highway=service|tertiary          ) then ( if isunpaved then 1.6 else 1 )
 
   #
   # tracks and track-like ways are rated mainly be tracktype/grade
@@ -236,32 +227,28 @@ assign costfactor
   #
   else if ( highway=track|road|path|footway ) then
   (
-    if      ( tracktype=grade1 ) then ( if probablyGood then 1.0 else multiply trackCost 1.1 )
-    else if ( tracktype=grade2 ) then ( if probablyGood then 1.1 else multiply trackCost 1.3 )
-    else if ( tracktype=grade3 ) then ( if probablyGood then 1.4 else multiply trackCost 1.5 )
-    else if ( tracktype=grade4 ) then ( if probablyGood then 2 else multiply trackCost 2.5 )
-    else if ( tracktype=grade5 ) then ( if probablyGood then 3.5 else multiply trackCost 4.0 )
-    else                              ( if probablyGood then 1.0 else multiply trackCost 1.3 )
+    if      ( tracktype=grade1 ) then ( if probablyGood then 1 else multiply trackCost 1 )
+    else if ( tracktype=grade2 ) then ( if probablyGood then 1 else multiply trackCost 1 )
+    else if ( tracktype=grade3 ) then ( if probablyGood then 1.4 else multiply trackCost 1.4 )
+    else if ( tracktype=grade4 ) then ( if probablyGood then 2 else multiply trackCost 2 )
+    else if ( tracktype=grade5 ) then ( if probablyGood then 3 else multiply trackCost 3 )
+    else                              ( if probablyGood then 1 else multiply trackCost 1 )
   )
 
-  #
-  # When avoiding unsafe ways, avoid highways without a bike hint
-  #
-  else add ( if ( and avoid_unsafe not isbike ) then 2 else 0 )
+
 
   #
   # actuals roads are o.k. if we have a bike hint
   #
-       if ( highway=trunk|trunk_link         ) then ( if isbike then 1.5 else 10  )
-  else if ( highway=primary|primary_link     ) then ( if isbike then 1.2 else  3  )
-  else if ( highway=secondary|secondary_link ) then ( if isbike then 1.1 else 1.9 )
-  else if ( highway=tertiary|tertiary_link   ) then ( if isbike then 1.0 else 1.4 )
-  else if ( highway=unclassified             ) then ( if isbike then 1.0 else 1.3 )
+  else if ( highway=trunk|trunk_link         ) then ( if isbike then 1.3 else 50  )
+  else if ( highway=primary|primary_link     ) then ( if isbike then 1.2 else 10  )
+  else if ( highway=secondary|secondary_link ) then ( if isbike then 1.1 else add 1 unsafe_penalty )
+  else if ( highway=tertiary|tertiary_link|unclassified ) then 1.0
 
   #
   # default for any other highway type not handled above
   #
-  else 2.0
+  else 1.1
 
 
 # way priorities used for voice hint generation

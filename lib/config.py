@@ -27,10 +27,10 @@ class Config:
     STATIC_CACHE_TIMOUT = int(env("STATIC_CACHE_TIMOUT", 24 * 3600))
 
     # In seconds
-    SIGNIFICANT_TIME_DIFF = int(env("RELEVANT_TIME_DIFF", 30))
+    SIGNIFICANT_TIME_DIFF = int(env("RELEVANT_TIME_DIFF", 60))
 
-    # In meters
-    SIGNIFICANT_SAFE_DIFF = int(env("RELEVANT_SAFE_DIFF", 0))
+    # Difference in lowe than this in unsafe distance will be considered identic
+    SIGNIFICANT_SAFE_DIFF = int(env("RELEVANT_SAFE_DIFF", 100))
 
 
     LANGUAGES= env("LANGUAGES", "fr,en").split(",")

@@ -8,7 +8,15 @@ DANGER = "danger"
 MEDIUM = "medium_traffic"
 LOW = "low_traffic"
 
-UNSAFE = [DANGER, MEDIUM]
+# Cost added to unsafe cost, for low traffic (1 is for MEDIUM)
+UNSAFE_SCORE = {
+    BIKE:0,
+    PATH:0,
+    DANGER:10,
+    MEDIUM:1,
+    LOW:0.1
+}
+
 
 class Coord :
     def __init__(self, lon:float, lat:float, elevation:float=None):
@@ -20,6 +28,7 @@ class Path :
     def __init__(self):
         self.tags : Dict[str, str] = {}
         self.length = 0
+        self.costs = dict()
         self.coords : List[Coord] = []
 
     def type(self):
@@ -33,13 +42,14 @@ class Path :
         def tag(key) :
             return tag_eq(key, "yes")
 
+        lanes = ["lane", "opposite", "opposite_lane", "track", "opposite_track", "share_busway", "share_lane"]
+
         isprotected = tag("bicycle_road") \
                  or tag_eq("bicycle", "designated") \
                  or tag_eq("highway", "cycleway") \
-                 or tag_in("cycleway", ["lane", "opposite", "opposite_lane", "track", "opposite_track", "share_busway"]) \
-                 or tag_eq("cycleway:right", "lane") \
-                 or tag_eq("cycleway:left", "lane") \
-                 or tag_eq("cycleway:both", "lane")
+                 or tag_in("cycleway", lanes) \
+                 or tag_in("cycleway:right", lanes) \
+                 or tag_in("cycleway:left", lanes)
 
         isbike = isprotected or tag_in("bicycle", ["yes", "permissive"])
         ispaved = tag_in("surface", ["paved", "asphalt", "concrete", "paving_stones"])
@@ -74,26 +84,35 @@ class Path :
 
 
 class Itinerary:
-    def __init__(self, time):
+    def __init__(self, time, length, cost):
         self.time = time
         self.profile = None
         self.alternative = None
         self.paths : List[Path] = []
+        self.cost = cost
+        self.length = length
+
 
     def shares(self):
 
         counts = defaultdict(lambda : 0)
-        length = self.length()
 
-        for path in self.paths :
+        for path in self.paths:
             counts[path.type()] += path.length
-        return dict((k, count/length) for k, count in counts.items())
+        return dict((k, count/self.length) for k, count in counts.items())
 
-    def length(self):
-        return sum(path.length for path in self.paths)
+
+
+    def unsafe_score(self):
+
+        res = 0
+        for path in self.paths:
+            path_type = path.type()
+            res += path.length * UNSAFE_SCORE[path_type]
+        return res
 
     def __json__(self):
         return {**self.__dict__,
                 "shares":self.shares(),
-                "length":self.length()}
+                "unsafe_score" : self.unsafe_score()}
 

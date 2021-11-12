@@ -36,11 +36,12 @@ def get_itineraries():
 
     start = list(map(lambda s: float(s), request.args["start"].split(",")))
     end = list(map(lambda s: float(s), request.args["end"].split(",")))
-    prof = request.args["profile"]
+    moutain = str2bool(request.args.get("mountain", "false"))
     elec = str2bool(request.args.get("elec", "false"))
+    best_only = str2bool(request.args.get("best_only", "true"))
 
     try :
-        itis = get_all_itineraries(start, end, prof, electric=elec)
+        itis = get_all_itineraries(start, end, best_only, electric=elec, mountainBike=moutain)
     except HttpError as e:
         if e.status == 400:
             return "No itinerary found", 400
@@ -49,7 +50,7 @@ def get_itineraries():
     car_distance = None
     try :
         car_iti = get_route_safe(start, end, "car-fast", 1)
-        car_distance = car_iti.length()
+        car_distance = car_iti.length
     except:
         pass
 

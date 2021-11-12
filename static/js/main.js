@@ -21,7 +21,7 @@ const SortType = {
     FAST : "fast"
 }
 
-const address_parts = ["shop", "tourism", "amenity", "highway", "road", "village", "town", "city"]
+const address_parts = ["commercial", "shop", "tourism", "amenity", "highway", "road", "village", "town", "city"]
 
 const typeColors = {
     [BIKE] : "#8efc95",
@@ -48,6 +48,7 @@ const state = {
     estimatesClosed : false,
     view : VIEW_SAFETY,
     debug:false,
+    best:false,
 }
 
 const markers = {
@@ -69,6 +70,7 @@ ZERO_SLOPE_COLOR = [100, 100, 50]
 
 var map = null;
 const PANES = {};
+
 var geojsonLayers = [];
 
 const TOP_PANE_ZINDEX = 440;
@@ -178,6 +180,15 @@ function slopeColor(slope) {
     return 'hsl(' + color[0] + ',' + color[1] + '%,' + color[2] + '%)'
 }
 
+function getOrCreatePane(id) {
+    if (!(id in PANES)) {
+        let pane = map.createPane(id);
+        pane.style.zIndex = LOW_PANE_ZINDEX;
+        PANES[id] = pane;
+        console.log("created pane" + id)
+    }
+    return PANES[id];
+}
 
 function initMap() {
 
@@ -185,7 +196,6 @@ function initMap() {
     {
         // dragging: !L.Browser.mobile
     }).setView(CONFIG.center, CONFIG.init_zoom);
-
 
     let tileLayer = L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
                     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
@@ -200,15 +210,6 @@ function initMap() {
         '<a href="http://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> | ' +
         '<a href="https://github.com/cyclosm/cyclosm-cartocss-style/releases" title="CyclOSM - Open Bicycle render">CyclOSM</a> ');
 
-
-    for (let profile of ["route", "vtt"]) {
-        for (let alternative of [1, 2, 3, 4]) {
-            let id = profile + "-" + alternative;
-            let pane = map.createPane(id);
-            pane.style.zIndex = LOW_PANE_ZINDEX;
-            PANES[id] = pane
-        }
-    }
 
     new L.Control.Legend({position: 'topright'}).addTo(map);
     new L.Control.CurrentLocationButton({position: 'topleft'}).addTo(map);
@@ -333,7 +334,7 @@ function updateList() {
 
     let sortedIti = state.itineraries ? [...state.itineraries] : [];
     sortedIti.sortOn(function (iti) {
-        return (state.sort === SortType.SAFE) ? (unsafeDistance(iti)) : iti.time;
+        return (state.sort === SortType.SAFE) ? (iti.unsafe_score) : iti.time;
     })
 
     let max_distance = Math.max(...sortedIti.map(iti => iti.length));
@@ -516,8 +517,9 @@ function highlightIti(over_id) {
         let highlighted = (isHighlighted(iti.id) || (!state.selected && !over_id));
 
         // Highlight the panes containing the itinerary
-        PANES[iti.id].style.opacity = highlighted ? 1: 0.25;
-        PANES[iti.id].style.zIndex = highlighted ? TOP_PANE_ZINDEX : LOW_PANE_ZINDEX;
+        let pane = getOrCreatePane(iti.id);
+        pane.style.opacity = highlighted ? 1: 0.25;
+        pane.style.zIndex = highlighted ? TOP_PANE_ZINDEX : LOW_PANE_ZINDEX;
     }
 
     // Highlight on list
@@ -548,12 +550,20 @@ function updateMap() {
 
     function drawIti(iti) {
 
+        // Create pane if it does not exist yet
+        getOrCreatePane(iti.id);
+
         function addPoly(poly, path) {
 
             if (state.debug) {
-                console.log(poly)
-                const content = Object.entries(path.tags).map(([k, v], _) => "<b>" + k + "</b> :" + v + "<br/>").join("\n");
-
+                let vals = {
+                    ...path.tags,
+                    ...path.costs,
+                    "iti total cost" : iti.cost,
+                    "iti total length" : iti.length,
+                    "iti avg cost" : iti.cost / iti.length,
+                };
+                const content = Object.entries(vals).map(([k, v], _) => "<b>" + k + "</b> :" + v + "<br/>").join("\n");
                 poly.bindTooltip(content, {sticky: true})
             }
 
@@ -643,6 +653,7 @@ function urlUpdated() {
     state.vtt = urlParams.get("profile") ? (urlParams.get("profile") === "vtt") : true;
     state.sort = urlParams.get("sort") || "safe";
     state.debug = urlParams.get("debug") === "true";
+    state.best = ! (urlParams.get("best") === "false");
     state.selected = window.location.hash.replace("#", "");
 
     for (let end of [START, END]) {
@@ -720,8 +731,9 @@ function updateItineraryFromState() {
     let url = "/api/itineraries?" + encodeParams ({
         start : start.lat + "," + start.lon,
         end: end.lat + "," + end.lon,
-        profile : (state.vtt ? "vtt" : "route"),
-        elec : (state.vae)
+        mountain : (state.vtt),
+        elec : (state.vae),
+        best_only : state.best,
     });
 
     $("body").addClass("loading");
@@ -784,6 +796,7 @@ function updateUrl() {
         vae: state.vae,
         sort : state.sort,
         debug : state.debug ? "true" : null,
+        best : state.best ? null : "false",
         ...encodeCoords()
     }
 
@@ -847,14 +860,24 @@ function nominatim(q, callback) {
                     parts.push(addr[part]);
                 }
             }
+
+            if (parts.length === 0) {
+                return null;
+            }
+
+            let text = parts.join(", ");
+            if ("postcode" in addr) {
+                text += " [" + addr["postcode"] + "]"
+            }
+
             return {
-                text : parts.join(", "),
+                text,
                 value : {
                     lat: parseFloat(item.lat),
                     lon: parseFloat(item.lon)
                 }
             }
-        });
+        }).filter(item => item !== null);
 
         callback(res);
     });
@@ -865,7 +888,6 @@ function nominatim(q, callback) {
 function setupAutocomplete() {
 
     let debouncedNominatim = debounce(nominatim, 1000);
-
 
     for (let end of [START, END]) {
 

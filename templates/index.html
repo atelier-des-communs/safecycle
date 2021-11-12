@@ -100,8 +100,11 @@
     <div class="center-container">
         <form class="form-inline mb-3 ">
             <div class="btn-group mr-2">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    [[: _.sort_label ]] :  [[: _.sort[sort] ]]
+                <button
+                        type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        title="[[: _.sort_label ]]">
+
+                    <i class="bi-sort-down"></i>  [[: _.sort[sort] ]]
                 </button>
                 <div class="dropdown-menu">
                     <button type="button" class="dropdown-item sort-button" data-sort="[[: sort_alt ]]">[[: _.sort[sort_alt] ]]</button>
@@ -109,8 +112,10 @@
             </div>
 
             <div class="btn-group">
-                <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                      [[: _.view_label ]] : [[: _.view[view] ]]
+                <button
+                        type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                        title="[[: _.view_label ]]">
+                    <i class="bi-eye"></i> [[: _.view[view] ]]
                 </button>
                 <div class="dropdown-menu">
                     <button type="button" class="dropdown-item view-button" data-view="[[: view_alt ]]">[[: _.view[view_alt] ]]</button>

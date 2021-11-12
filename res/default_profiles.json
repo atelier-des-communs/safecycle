@@ -1,10 +1,14 @@
 {
-  "route" : {
-      "mountainBike" : false,
-       "electric" : false
+  "fast" : {
+      "unprotected_penalty" : 0.05,
+      "unsafe_penalty" : 0.05
   },
-  "vtt" : {
-      "mountainBike" : true,
-      "electric" : false
+  "medium" : {
+       "unprotected_penalty" : 0.1,
+       "unsafe_penalty" : 0.2
+  },
+  "safe" : {
+       "unprotected_penalty" : 0.2,
+       "unsafe_penalty" : 0.3
   }
 }

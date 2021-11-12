@@ -117,6 +117,9 @@ def process_message(js) :
     cost = int(props["cost"])
     length = int(props["track-length"])
 
+    debug(time=time, cost=cost, length=length)
+    debug(path_messages=json.dumps(messages, indent=2))
+
     iti = Itinerary(time, length, cost)
 
     def new_path() :
@@ -279,7 +282,7 @@ def render_profile(profile_name, **params_overrides) :
 def get_all_itineraries(start, end, best_only=False,  **params):
 
     profiles = ["fast", "medium", "safe"]
-    alternatives = [1, 2, 3]
+    alternatives = [0, 1, 2]
 
     combinations = [(prof, alt) for prof in profiles for alt in alternatives]
 
@@ -290,6 +293,9 @@ def get_all_itineraries(start, end, best_only=False,  **params):
     # Execute in parallel
     with ThreadPoolExecutor(max_workers=4) as executor:
         itis = list(executor.map(process_fn, combinations))
+
+    # sequential version
+    # itis = list(map(process_fn, combinations))
 
     if best_only:
         itis = purge_bad_itineraries(itis)

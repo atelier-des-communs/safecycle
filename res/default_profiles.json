@@ -1,14 +1,14 @@
 {
   "fast" : {
-      "unprotected_penalty" : 0.05,
-      "unsafe_penalty" : 0.05
+      "unprotected_cost" : 1.05,
+      "unsafe_cost" : 1.5
   },
   "medium" : {
-       "unprotected_penalty" : 0.1,
-       "unsafe_penalty" : 0.2
+       "unprotected_cost" : 1.1,
+       "unsafe_cost" : 3
   },
   "safe" : {
-       "unprotected_penalty" : 0.2,
-       "unsafe_penalty" : 0.3
+       "unprotected_cost" : 1.2,
+       "unsafe_cost" : 10
   }
 }

@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from math import nan
 
 import requests
 from flask import Response
@@ -22,7 +23,6 @@ WORSE="worse"
 
 def debug(*args, **kwargs):
     if Config.FLASK_ENV == "development":
-
         if kwargs :
             for key, val in kwargs.items():
                 args += "%s=%s" % (key, str(val)),
@@ -117,8 +117,8 @@ def process_message(js) :
     cost = int(props["cost"])
     length = int(props["track-length"])
 
-    debug(time=time, cost=cost, length=length)
-    debug(path_messages=json.dumps(messages, indent=2))
+    #debug(time=time, cost=cost, length=length)
+    #debug(path_messages=json.dumps(messages, indent=2))
 
     iti = Itinerary(time, length, cost)
 
@@ -132,7 +132,9 @@ def process_message(js) :
     curr_message = next(message_it)
 
     for i_coord, coords in enumerate(coordinates):
-        lon, lat, height = coords
+
+        lon, lat = coords[0:2]
+        height = coords[2] if len(coords) == 3 else None
 
         lon_str = str(int(lon * 1000000))
         lat_str = str(int(lat * 1000000))

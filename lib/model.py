@@ -74,6 +74,8 @@ class Path :
     def slope(self):
         if len(self.coords) < 2 or self.length == 0:
             return 0
+        if self.coords[-1].elevation is None or self.coords[0].elevation is None :
+            return 0
         return (self.coords[-1].elevation - self.coords[0].elevation) / self.length * 100
 
     def __json__(self):
